@@ -5,18 +5,18 @@
 clear all
 
 % VMR15 without P2P
-% names{1} = {'subj1','subj2','subj3','subj4','subj5','subj6','subj7','subj8','subj9','subj10'};
-% groups = {'rot'};
-% path = 'Data/no_P2P_15deg/';
-% blocks = {'baseline','early','late','after'};
-% START = repmat([0.6 0.25],[9 1]);
-% START = [START; 0.6 0.3];
+names{1} = {'subj1','subj2','subj3','subj4','subj5','subj6','subj7','subj8','subj9','subj10'};
+groups = {'rot'};
+path = 'Data/no_P2P_15deg/';
+blocks = {'baseline','early','late','after'};
+START = repmat([0.6 0.25],[9 1]);
+START = [START; 0.6 0.3];
 
 % VMR15 with P2P
-names{1} = {'subj11','subj12','subj13','subj14','subj15','subj17','subj18','subj20','subj21','subj22'};
-path = 'Data/no_P2P_15deg/';
-blocks = {'baseline','rot1','rot2','rot3'};
-START = repmat([0.8 0.3],[10 1]);
+% names{1} = {'subj11','subj12','subj13','subj14','subj15','subj17','subj18','subj20','subj21','subj22'};
+% path = 'Data/no_P2P_15deg/';
+% blocks = {'baseline','rot1','rot2','rot3'};
+% START = repmat([0.8 0.3],[10 1]);
 
 for i = 1:length(names)
     subjnames = names{i};
