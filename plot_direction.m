@@ -17,12 +17,12 @@ for i = 1:length(groups)
     end
 
     dir = unwrap(dir);
-    se = 2*(circ_std(dir,[],[],2)/sqrt(Nsubj))*180/pi;
+    se = (circ_std(dir,[],[],2)/sqrt(Nsubj))*180/pi;
     
     dirBin2 = reshape(dir,[3 size(dir,1)/3 Nsubj]);
     dirBin2 = squeeze(circ_mean(dirBin2,[],1));
     dirBin = circ_mean(dirBin2,[],2)*180/pi;
-    seBin = 2*(circ_std(dirBin2,[],[],2)/sqrt(Nsubj))*180/pi;
+    seBin = (circ_std(dirBin2,[],[],2)/sqrt(Nsubj))*180/pi;
     
     dir = circ_mean(dir,[],2)*180/pi;
     edges = -50:10:130;
