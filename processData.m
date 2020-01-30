@@ -31,6 +31,13 @@ for i=1:data.Ntrials
     % compute initial reach direction
     data.iDir(i) = data.init(i)+20; % 100 ms (13 time steps) after initiation
     data.initDir(i) = atan2(vel(data.iDir(i),2),vel(data.iDir(i),1));
+    data.initDir(i) = data.initDir(i)-pi/2;
+    while data.initDir(i) > pi
+        data.initDir(i) = data.initDir(i)-2*pi;
+    end
+    while data.initDir(i) < -pi
+        data.initDir(i) = data.initDir(i)+2*pi;
+    end
     
     % compute velocity and position at time of jump (could be useful to
     % know)
