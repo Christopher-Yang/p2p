@@ -9,7 +9,7 @@ trial = 1;
 tFileFull = [];
 for blk=1:Nblocks
     %disp(['Subject ',subjname,', ','Block: ',blocknames(blk)]);
-    path = [subjname,'/',blocknames{blk}];
+    path = [subjname,'/',blocknames];
     %disp(path);
     tFile = dlmread([path,'/tFile.tgt'],' ',0,0);
     fnames = dir(path);
