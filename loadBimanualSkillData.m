@@ -18,7 +18,7 @@ for i = 1:length(names)
         clear data
         disp(subjnames{subj});
         disp('    Loading Subject Data...');
-        data = loadSubjData([path{i},subjnames{subj}],blocks,START(subj,:)); % load one chunk - loadSubjData(Subjname, {blocknames}); load in chunks of 5 based on target jumps
+        data = loadSubjData([path{i},subjnames{subj}],{blocks},START(subj,:)); % load one chunk - loadSubjData(Subjname, {blocknames}); load in chunks of 5 based on target jumps
 
         % process data (smooth etc, rotate, get RT, etc.)
         disp('    Processing Data...')
