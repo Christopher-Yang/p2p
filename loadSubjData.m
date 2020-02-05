@@ -8,9 +8,7 @@ Nblocks = length(blocknames);
 trial = 1;
 tFileFull = [];
 for blk=1:Nblocks
-    %disp(['Subject ',subjname,', ','Block: ',blocknames(blk)]);
     path = [subjname,'/',blocknames{blk}];
-    %disp(path);
     tFile = dlmread([path,'/tFile.tgt'],' ',0,0);
     fnames = dir(path);
     Ntrials = size(tFile,1);
@@ -102,8 +100,6 @@ for j=1:data.Ntrials % iterate through all trials
     
     data.Cr{j} = (R*(data.C{j}'-repmat(start(j,:),size(data.C{j},1),1)'))';
     data.Nr{j} = (R*(data.N{j}'))';
-    
-
 end
 data.theta = theta;
 
