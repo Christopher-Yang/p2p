@@ -16,7 +16,7 @@ clear all
 names{1} = {'subj17','subj18','subj21','subj22','subj24','subj25','subj28','subj31','subj32','subj33'}; % rotation group
 names{2} = {'subj14','subj15','subj16','subj19','subj23','subj26','subj27','subj29','subj30','subj34'}; % mirror-reversal group
 groups = {'rot','mir'}; % names of groups
-path = 'Data/rot_vs_mir/'; % path to the data
+path = 'Data/vmr90_vs_mr/'; % path to the data
 blocks = {'baseline','pert1','pert2','pert3'}; % names of the blocks
 START = repmat([0.8 0.3],[10 1]); % initial position of the target in meters
 
