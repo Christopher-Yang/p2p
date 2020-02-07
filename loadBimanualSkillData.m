@@ -5,37 +5,44 @@
 % Part 1 analyzes the point-to-point data while Part 2 plots the figure.
 % Analysis and plotting code can be run independently of one another.
 %
-% To generate Figure 2A, run the entire script, which should take about 5 
-% minutes. To avoid running the analysis multiple times, the variable "d"
+% To generate Figure 2A, run the entire script, which should take less than 
+% 5 minutes. To avoid running the analysis multiple times, the variable "d"
 % can be saved and loaded for plotting as needed.
 
 %% PART 1: ANALYSIS
 clear all
 
 % set variables for analysis
-names{1} = {'subj17','subj18','subj21','subj22','subj24','subj25','subj28','subj31','subj32','subj33'}; % rotation group
-names{2} = {'subj14','subj15','subj16','subj19','subj23','subj26','subj27','subj29','subj30','subj34'}; % mirror-reversal group
+names{1} = {'subj17','subj18','subj21','subj22','subj24','subj25'...
+    ,'subj28','subj31','subj32','subj33'}; % rotation group
+names{2} = {'subj14','subj15','subj16','subj19','subj23','subj26'...
+    ,'subj27','subj29','subj30','subj34'}; % mirror-reversal group
 groups = {'rot','mir'}; % names of groups
 path = 'Data/vmr90_vs_mr/'; % path to the data
 blocks = {'baseline','pert1','pert2','pert3'}; % names of the blocks
-START = repmat([0.8 0.3],[10 1]); % initial position of the target in meters
+START = repmat([0.8 0.3],[10 1]); % initial position of the target (meters)
 
-for i = 1:length(names)
+for i = 1:length(names) % iterate over groups of subjects
     subjnames = names{i};
     Nsubj = length(subjnames);
-    for subj = 1:Nsubj
+    for j = 1:Nsubj % iterate over subjects
         clear data
-        disp(subjnames{subj});
+        disp(subjnames{j});
         
-        % load data
+        % Extract raw data for the jth subject from the ith group. Data
+        % includes cursor/hand trajectories, timestamps of movement, target
+        % positions, number of trials, etc. See loadSubjData() for details.
         disp('    Loading Subject Data...');
-        data = loadSubjData([path,subjnames{subj}],blocks,START(subj,:));
+        data = loadSubjData([path,subjnames{j}],blocks,START(j,:));
 
-        % process data (smooth etc, rotate, get RT, etc.)
+        % Compute initial reach direction.
         disp('    Processing Data...')
         data = processData(data);
-
-        d.(groups{i}){subj} = data; % store data into d
+        
+        % Store data into d. d is organized as d.[group]{[subject number]}.
+        % See processData() for more information on the meaning of
+        % individual fields.
+        d.(groups{i}){j} = data; 
     end
 end
 
