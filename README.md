@@ -2,10 +2,9 @@
 
 This collection is associated with the article "De novo learning
 versus adaptation of continuous control in a manual tracking task."
-This code generates all figures related to the sum-of-sinusoids
-tracking task. Raw data, organized by subject number, is contained in
-the folder "Data." Within each subject's data folder is folders
-corresponding to different blocks of the experiment:
+This code generates Figure 2A. Raw data, organized by subject number,
+is contained in the folder "Data." Within each subject's data folder
+is folders corresponding to different blocks of the experiment:
 
     baseline: reaches without rotation or mirror-reversal
     pert1: first point-to-point block under either perturbation
@@ -28,5 +27,5 @@ do the following:
 
     loadSubjData.m: extract raw data from data files
     plot_direction.m: plots reach-direction error
-    processData.m: analyzes raw data
+    processData.m: computes reach-direction  error
     savgolayFilt.m: Savitzky-Golay filter to smooth trajectories
