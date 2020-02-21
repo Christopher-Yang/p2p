@@ -3,12 +3,17 @@
 % This example loads a single 'chunk' (block of 5 trials)
 
 clear all
-names{1} = {'subj1','subj2','subj3','subj4','subj5','subj6','subj7'};
-names{2} = {'subj13','subj18','subj19','subj21','subj22'};
-names{3} = {'subj1'};
+names{1} = {'subj1','subj2','subj3','subj4','subj5','subj6','subj7','subj8','subj9','subj10','subj11','subj12'};
+names{2} = {'subj13','subj15','subj17','subj18','subj19','subj20','subj21','subj22'};
+names{3} = {'subj1','subj2','subj3','subj4'};
 path = {'Data/denovo_2day/','Data/denovo_5day/','Data/denovo_10day/'};
-blockNames = {'B5','B14','B29'};
-START = repmat([0.6 0.25],[10 1]);
+blockNames{1} = {'B2','B5','B6_habit'};
+blockNames{2} = {'B2','B14','B15_habit'};
+blockNames{3} = {'B2','B29','B30_habit'};
+% blockNames{1} = {'B1_baseline','B5'};
+% blockNames{2} = {'B1_baseline','B14'};
+% blockNames{3} = {'B1_baseline','B29'};
+START = [0.6 0.25];
 
 for i = 1:length(names)
     blocks = blockNames{i};
@@ -18,19 +23,12 @@ for i = 1:length(names)
         clear data
         disp(subjnames{subj});
         disp('    Loading Subject Data...');
-        data = loadSubjData([path{i},subjnames{subj}],{blocks},START(subj,:)); % load one chunk - loadSubjData(Subjname, {blocknames}); load in chunks of 5 based on target jumps
+        data = loadSubjData([path{i},subjnames{subj}],blocks,START); % load one chunk - loadSubjData(Subjname, {blocknames}); load in chunks of 5 based on target jumps
 
         % process data (smooth etc, rotate, get RT, etc.)
         disp('    Processing Data...')
         data = processData(data);
 
-        % split into jump types - save this into a different data structure d
-    %     disp('    Splitting data by jump type...')
-    %         d{subj} = splitDatabyJump(data);
-
-        % save data from this subject in a separate file
-    %     fname = fullfile(['BimanualSkillData_S',num2str(subj)]);
-    %     save(fname,'data')
         switch i 
             case 1
                 d.day2{subj} = data;
@@ -42,6 +40,5 @@ for i = 1:length(names)
     end
 end
 
-% d = edit_initDir(d);
 % save P2P d
 disp('All Done')
