@@ -18,6 +18,7 @@ for i=1:data.Ntrials
     data.init(i) = min(find(data.state{i}==4)); % time of movement initiation
     data.end(i) = max(find(data.state{i}==4)); % time of movement end
     
+    %% identify initial reach direction in x- and y-axes 
     if i == 1
         threshold_x = abs(data.C{i}(:,1)-0.6) > 0.01;
         threshold_y = abs(data.C{i}(:,2)-0.25) > 0.01;
@@ -76,6 +77,7 @@ for i=1:data.Ntrials
         end
     end
     
+    %%
     % should technically use data.init_x(i)+20 and similar for init_y, but
     % on some trials the initiation time is close to the end of the trial,
     % meaning the reach ends before adding on 150 ms 
@@ -118,9 +120,4 @@ for i=1:data.Ntrials
         data.initDir_noRot(i) = data.initDir_noRot(i)+2*pi;
     end
     
-    % compute velocity and position at time of jump (could be useful to
-    % know)
-    data.vel{i} = vel_Cr;
-    data.vel_at_jump(i,:) = vel_Cr(data.ipertonset(i),:)';
-    data.pos_at_jump(i,:) = data.Cr{i}(data.ipertonset(i),:);
 end

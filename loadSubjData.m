@@ -35,6 +35,36 @@ for blk=1:Nblocks
         targetRel(trial,:) = targetAbs(trial,:)-start(trial,:);
         pert(trial) = tFile(j,5);
         
+        targAng(trial) = atan2(targetRel(trial,2),targetRel(trial,1));
+        
+        % target position bin relative to mirror axis; bins numbered from 1
+        % (closest)-4 (furthest)
+        if targAng(trial)>pi/8 && targAng(trial)<3*pi/8
+            targBin(trial) = 1;
+        elseif targAng(trial)<-5*pi/8 && targAng(trial)>-7*pi/8
+            targBin(trial) = 1;
+        elseif targAng(trial)>5*pi/8 && targAng(trial)<7*pi/8
+            targBin(trial) = 4;
+        elseif targAng(trial)<-pi/8 && targAng(trial)>-3*pi/8
+            targBin(trial) = 4;
+        elseif targAng(trial)>0 && targAng(trial)<pi/8
+            targBin(trial) = 2;
+        elseif targAng(trial)>3*pi/8 && targAng(trial)<pi/2
+            targBin(trial) = 2;
+        elseif targAng(trial)<-pi/2 && targAng(trial)>-5*pi/8
+            targBin(trial) = 2;
+        elseif targAng(trial)<-7*pi/8 && targAng(trial)>-pi
+            targBin(trial) = 2;
+        elseif targAng(trial)>pi/2 && targAng(trial)<5*pi/8
+            targBin(trial) = 3;
+        elseif targAng(trial)>7*pi/8 && targAng(trial)<pi
+            targBin(trial) = 3;
+        elseif targAng(trial)<0 && targAng(trial)>-pi/8
+            targBin(trial) = 3;
+        elseif targAng(trial)<-3*pi/8 && targAng(trial) >-pi/2
+            targBin(trial) = 3;
+        end
+        
         ip = find(d(:,8));
         if(isempty(ip))
             ipertonset(trial) = NaN; % time of perturbation onset
@@ -59,9 +89,11 @@ Lc = L;
 Rc = R;
 
 % compute target angle
-data.targAng = atan2(targetRel(:,2),targetRel(:,1));
+% data.targAng = atan2(targetRel(:,2),targetRel(:,1));
+data.targAng = targAng;
 data.targIndex = data.targAng*(8/(2*pi));
 data.targDist = sqrt(sum(targetRel(:,1:2)'.^2));
+data.targBin = targBin;
 
 % store all info in data structure 'data'
 data.L = L;
@@ -102,8 +134,6 @@ for j=1:data.Ntrials % iterate through all trials
     
     data.Cr{j} = (R*(data.C{j}'-repmat(start(j,:),size(data.C{j},1),1)'))';
     data.Nr{j} = (R*(data.N{j}'))';
-    
-
 end
 data.theta = theta;
 

@@ -1,22 +1,22 @@
 %% plot reaction times for x- or y-axis movements
 
 groupName = {'day2','day5','day10'};
-Nsubj = [12 8 4];
+Nsubj = [length(d.day2) length(d.day5) length(d.day10)];
 Ngroup = length(groupName);
 
 for group = 1:Ngroup
     for subj = 1:Nsubj(group)
-        a = d.(groupName{group}){subj};
+        G = d.(groupName{group}){subj};
         
-        bad.idx = find(a.incorrectReach_x==1);
-        bad.idy = find(a.incorrectReach_y==1);
-        good.idx = find(a.incorrectReach_x==0);
-        good.idy = find(a.incorrectReach_y==0);
+        bad.idx = find(G.incorrectReach_x==1);
+        bad.idy = find(G.incorrectReach_y==1);
+        good.idx = find(G.incorrectReach_x==0);
+        good.idy = find(G.incorrectReach_y==0);
         
-        bad.x = a.init_x(bad.idx);
-        bad.y = a.init_y(bad.idy);
-        good.x = a.init_x(good.idx);
-        good.y = a.init_y(good.idy);
+        bad.x = G.init_x(bad.idx);
+        bad.y = G.init_y(bad.idy);
+        good.x = G.init_x(good.idx);
+        good.y = G.init_y(good.idy);
         
         count = 1;
         for i = 1:300
@@ -24,7 +24,7 @@ for group = 1:Ngroup
                 goodRT.(groupName{group}).x(i:300,subj) = NaN;
                 break
             elseif i == good.idx(count)
-                goodRT.(groupName{group}).x(i,subj) = a.time{good.idx(count)}(good.x(count))-a.time{good.idx(count)}(a.go(good.idx(count)));
+                goodRT.(groupName{group}).x(i,subj) = G.time{good.idx(count)}(good.x(count))-G.time{good.idx(count)}(G.go(good.idx(count)));
                 count = count+1;
             else
                 goodRT.(groupName{group}).x(i,subj) = NaN;
@@ -37,7 +37,7 @@ for group = 1:Ngroup
                 goodRT.(groupName{group}).y(i:300,subj) = NaN;
                 break
             elseif i == good.idy(count)
-                goodRT.(groupName{group}).y(i,subj) = a.time{good.idy(count)}(good.y(count))-a.time{good.idy(count)}(a.go(good.idy(count)));
+                goodRT.(groupName{group}).y(i,subj) = G.time{good.idy(count)}(good.y(count))-G.time{good.idy(count)}(G.go(good.idy(count)));
                 count = count+1;
             else
                 goodRT.(groupName{group}).y(i,subj) = NaN;
@@ -50,7 +50,7 @@ for group = 1:Ngroup
                 badRT.(groupName{group}).x(i:300,subj) = NaN;
                 break
             elseif i == bad.idx(count)
-                badRT.(groupName{group}).x(i,subj) = a.time{bad.idx(count)}(bad.x(count))-a.time{bad.idx(count)}(a.go(bad.idx(count)));
+                badRT.(groupName{group}).x(i,subj) = G.time{bad.idx(count)}(bad.x(count))-G.time{bad.idx(count)}(G.go(bad.idx(count)));
                 count = count+1;
             else
                 badRT.(groupName{group}).x(i,subj) = NaN;
@@ -63,7 +63,7 @@ for group = 1:Ngroup
                 badRT.(groupName{group}).y(i:300,subj) = NaN;
                 break
             elseif i == bad.idy(count)
-                badRT.(groupName{group}).y(i,subj) = a.time{bad.idy(count)}(bad.y(count))-a.time{bad.idy(count)}(a.go(bad.idy(count)));
+                badRT.(groupName{group}).y(i,subj) = G.time{bad.idy(count)}(bad.y(count))-G.time{bad.idy(count)}(G.go(bad.idy(count)));
                 count = count+1;
             else
                 badRT.(groupName{group}).y(i,subj) = NaN;
@@ -71,10 +71,115 @@ for group = 1:Ngroup
         end
     end
 end
-rng(1)
 
+%%
+for group = 1:Ngroup
+    G = goodRT.(groupName{group}).x(101:200,:);
+    G = G(~isnan(G));
+    
+    B = badRT.(groupName{group}).x(101:200,:);
+    B = B(~isnan(B));
+    start = 150;
+    i = 1;
+    while start <= max(G)-100
+        x = (G>start-99) + (G<start+100);
+        idx = find(x==2);
+        Ngood = length(idx);
+        
+        x = (B>start-99) + (B<start+100);
+        idx = find(x==2);
+        Nbad = length(idx);
+        
+        if Ngood+Nbad < 10
+            lateError{group}(i) = NaN;
+            lateIdx{group}(i) = NaN;
+        else
+            lateError{group}(i) = Nbad/(Nbad+Ngood);
+            lateIdx{group}(i) = 1;
+        end
+        total{group}(i) = Ngood+Nbad;
+        start = start+1;
+        i = i+1;
+    end
+    
+    G = goodRT.(groupName{group}).x(201:300,:);
+    G = G(~isnan(G));
+    
+    B = badRT.(groupName{group}).x(201:300,:);
+    B = B(~isnan(B));
+    start = 150;
+    i = 1;
+    while start <= max(G)-100
+        x = (G>start-99) + (G<start+100);
+        idx = find(x==2);
+        Ngood = length(idx);
+        
+        x = (B>start-99) + (B<start+100);
+        idx = find(x==2);
+        Nbad = length(idx);
+        
+        if Ngood+Nbad < 10
+            flipError{group}(i) = NaN;
+            flipIdx{group}(i) = NaN;
+        else
+            flipError{group}(i) = Nbad/(Nbad+Ngood);
+            flipIdx{group}(i) = 1;
+        end
+        
+        start = start+1;
+        i = i+1;
+    end
+end
+
+figure(4); clf
+subplot(1,2,1); hold on
+for i = 1:3
+    plot(150:length(lateError{i})+149,lateError{i})
+end
+axis([0 2200 0 1])
+title('Late learning')
+xlabel('Reaction Time (ms)')
+ylabel('P(error|RT)')
+
+subplot(1,2,2); hold on
+for i = 1:3
+    plot(150:length(flipError{i})+149,flipError{i})
+end
+axis([0 2200 0 1])
+title('Post-flip')
+xlabel('Reaction Time (ms)')
+ylabel('P(error|RT)')
+legend({'Day 2','Day 5','Day 10'})
+
+figure(5); clf
+for i = 1:Ngroup
+    subplot(2,3,i); hold on
+    plot(150:length(flipError{i})+149,flipError{i})
+    axis([0 2200 0 1])
+    if i == 1
+        ylabel('P(incorrect|RT)')
+    end
+    
+    subplot(2,3,i+3)
+    plot(goodRT.(groupName{i}).x(201:300,:),1+0.3*(rand(100,Nsubj(i))-0.5),'k.','MarkerSize',5)
+    hold on
+    plot(badRT.(groupName{i}).x(201:300,:),2+0.3*(rand(100,Nsubj(i))-0.5),'k.','MarkerSize',5)
+    xlim([0 2200])
+    if i == 1
+        yticks(1:2)
+        yticklabels({'Correct Reaches','Incorrect Reaches'})
+    elseif i == 2
+        yticks([])
+        xlabel('Reaction Time')
+    else
+        yticks([])
+    end
+end
+
+%%
+rng(1)
 % plot for left hand
-figure(6); clf;
+figure(1); clf;
 for i = 1:Ngroup
     subplot(2,3,i)
     plot(1+0.3*(rand(100,Nsubj(i))-0.5),goodRT.(groupName{i}).x(101:200,:)/1000,'k.','MarkerSize',5)
@@ -101,7 +206,7 @@ for i = 1:Ngroup
 end
 
 % plot for right hand
-figure(7); clf;
+figure(2); clf;
 for i = 1:Ngroup
     subplot(2,3,i)
     plot(1+0.3*(rand(100,Nsubj(i))-0.5),goodRT.(groupName{i}).y(101:200,:)/1000,'k.','MarkerSize',5)
@@ -166,7 +271,7 @@ for j = 1:length(names)
     end
 end
 
-figure(4); clf
+figure(3); clf
 for j = 1:3
     subplot(1,3,j); hold on
     plot(abs(dirError{j}(1:100,:)*180/pi), early{j},'.','Color',col(2,:),'MarkerSize',15)
