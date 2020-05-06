@@ -28,16 +28,16 @@ for i = 1:length(groups)
     edges = -50:10:130;
     
     % plot reach error binned by 3 trials
-    figure(1); 
+    figure(1);
     subplot(1,2,i); hold on
-    x = shadedErrorBar(1:3:150,dirBin(1:50),seBin(1:50));
+    x = shadedErrorBar(1:150,dir(1:150),se(1:150));
     editErrorBar(x,[0 0 0],1);
     plot([1000 1001],[1000 1001],'b','LineWidth',1)
-    x = shadedErrorBar(151:3:300,dirBin(51:100),seBin(51:100));
+    x = shadedErrorBar(151:300,dir(151:300),se(151:300));
     editErrorBar(x,[0 0 0],1);
-    x = shadedErrorBar(301:3:450,dirBin(101:150),seBin(101:150));
+    x = shadedErrorBar(301:450,dir(301:450),se(301:450));
     editErrorBar(x,[0 0 0],1);
-    x = shadedErrorBar(451:3:600,dirBin(151:200),seBin(151:200));
+    x = shadedErrorBar(451:600,dir(451:600),se(451:600));
     editErrorBar(x,[0 0 0],1);
     plot([-5 1000],[0 0],'--k','LineWidth',1)
     rectangle('Position',[1 -200 Ntrials2 400],'FaceColor',[col(1,:) 0.1],'EdgeColor','none')
@@ -50,9 +50,9 @@ for i = 1:length(groups)
         title('Mirror Reversal')
     end
     set(gca,'TickDir','out')
-    axis([100 600 -60 60])
+    axis([100 600 -90 90])
     xticks([100 151 301 451 600])
-    yticks(-45:45:45)
+    yticks(-90:45:90)
     xlabel('Trial Number')
 end
 
