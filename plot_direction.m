@@ -50,8 +50,8 @@ for i = 1:length(groups)
         title('Mirror Reversal')
     end
     set(gca,'TickDir','out')
-    axis([100 600 -90 90])
-    xticks([100 151 301 451 600])
+    axis([101 600 -90 90])
+    xticks([101 151 301 451 600])
     yticks(-90:45:90)
     xlabel('Trial Number')
 end
