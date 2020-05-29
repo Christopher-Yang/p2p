@@ -16,20 +16,27 @@ for i = 1:Ngroup
     dir = NaN(Ntrials,Nsubj);
     
     for j = 1:Nsubj
-        dir(:,j) = d.(groups{i}){j}.initDir;
+        dir(:,j) = d.(groups{i}){j}.initDir*180/pi;
+        for k = 1:3
+            idx = (k-1)*100+1:(k-1)*100+100;
+            pd = fitdist(dir(idx,j),'Normal');
+            fits{i}{k}(j) = pd.sigma;
+        end
     end
 
-    se = (circ_std(dir,[],[],2)/sqrt(Nsubj))*180/pi;
+    se = (circ_std(dir,[],[],2)/sqrt(Nsubj));
     
-    dirBin2 = reshape(dir,[4 size(dir,1)/4 Nsubj]);
-    dirBin2 = squeeze(circ_mean(dirBin2,[],1));
-    dirBin = circ_mean(dirBin2,[],2)*180/pi;
-    seBin = (circ_std(dirBin2,[],[],2)/sqrt(Nsubj))*180/pi;
+%     for j = 1:3
+%         pd = fitdist(reshape(dir((j-1)*100+1:(j-1)*100+100,:),[numel(dir{i}((j-1)*100+1:(j-1)*100+100,:)) 1]),'Normal');
+%         fits{i}.mu(j) = pd.mu;
+%         fits{i}.sigma(j) = pd.sigma;
+%     end
     
-%     dirError(:,i) = circ_mean(dir,[],2)*180/pi;
     dirError{i} = dir;
     bins{i} = d.(groups{i}){1}.targBin;
 end
+
+
 
 %%
 
@@ -38,54 +45,69 @@ edges = (-180:15:180)*pi/180;
 figure(1)
 for i = 1:Ngroup
     subplot(3,Ngroup,i)
-    polarhistogram(dirError{i}(1:100,:),edges,'Normalization','pdf')
+    polarhistogram(dirError{i}(1:100,:)*pi/180,edges,'Normalization','pdf')
     title(graph_names{i})
 %     rlim([0 1.75])
     
     subplot(3,Ngroup,i+3)
-    polarhistogram(dirError{i}(101:200,:),edges,'Normalization','pdf')
+    polarhistogram(dirError{i}(101:200,:)*pi/180,edges,'Normalization','pdf')
 %     rlim([0 1.75])
     
     subplot(3,Ngroup,i+6)
-    polarhistogram(dirError{i}(201:300,:),edges,'Normalization','pdf')
+    polarhistogram(dirError{i}(201:300,:)*pi/180,edges,'Normalization','pdf')
 %     rlim([0 1.75])
 end
 
 edges = -180:10:180;
 figure(2); clf
 for i = 1:Ngroup
-    subplot(3,Ngroup,i)
-    histogram(dirError{i}(1:100,:)*180/pi,edges,'Normalization','pdf')
-%     ksdensity(reshape(dirError{i}(1:100,:)*180/pi,[numel(dirError{i}(1:100,:)) 1]))
-    axis([-180 180 0 .035])
-    xticks(-180:45:180)
-    title(graph_names{i})
-    if i == 1
-        ylabel('Early learning')
-    end
-    box off
-    
-    subplot(3,Ngroup,i+3)
-    histogram(dirError{i}(101:200,:)*180/pi,edges,'Normalization','pdf')
-%     ksdensity(reshape(dirError{i}(101:200,:)*180/pi,[numel(dirError{i}(101:200,:)) 1]))
-    axis([-180 180 0 .035])
-    xticks(-180:45:180)
-    if i == 1
-        ylabel('Late learning')
-    end
-    box off
-    
-    subplot(3,Ngroup,i+6)
-    histogram(dirError{i}(201:300,:)*180/pi,edges,'Normalization','pdf')
-%     ksdensity(reshape(dirError{i}(101:200,:)*180/pi,[numel(dirError{i}(101:200,:)) 1]))
-    axis([-180 180 0 .035])
-    xticks(-180:45:180)
-    if i == 1
-        ylabel('Post-flip')
-    elseif i == 2
+    subplot(1,2,1); hold on
+%     histogram(dirError{i}(1:100,:),edges,'Normalization','pdf')
+    [f,xi] = ksdensity(reshape(dirError{i}(1:100,:),[numel(dirError{i}(1:100,:)) 1]));
+    plot(xi,f,'LineWidth',2)
+%     pd = fitdist(reshape(dirError{i}(1:100,:),[numel(dirError{i}(1:100,:)) 1]),'Normal');
+%     x = -180:0.1:180;
+%     y = normpdf(x,pd.mu,pd.sigma);
+%     plot(x,y,'k')
+    if i == 3
+        title('Early Learning')
         xlabel('Reach direction error (degrees)')
+        ylabel('Probability density')
+        axis([-180 180 0 .04])
+        xticks(-180:90:180)
+        yticks(0:0.01:0.05)
+        box off
+        legend({'2-day','5-day','10-day'})
     end
-    box off
+    
+    subplot(1,2,2); hold on
+%     histogram(dirError{i}(101:200,:),edges,'Normalization','pdf')
+    [f,xi] = ksdensity(reshape(dirError{i}(101:200,:),[numel(dirError{i}(101:200,:)) 1]));
+    plot(xi,f,'LineWidth',2)
+%     pd = fitdist(reshape(dirError{i}(101:200,:),[numel(dirError{i}(101:200,:)) 1]),'Normal');
+%     x = -180:0.1:180;
+%     y = normpdf(x,pd.mu,pd.sigma);
+%     plot(x,y,'k')
+    if i == 3
+        title('Late Learning')
+        xlabel('Reach direction error (degrees)')
+        axis([-180 180 0 .04])
+        xticks(-180:90:180)
+        yticks(0:0.01:0.05)
+        box off
+    end
+    
+%     subplot(3,Ngroup,i+6)
+% %     histogram(dirError{i}(201:300,:),edges,'Normalization','pdf')
+%     ksdensity(reshape(dirError{i}(201:300,:),[numel(dirError{i}(101:200,:)) 1]))
+%     axis([-180 180 0 .035])
+%     xticks(-180:45:180)
+%     if i == 1
+%         ylabel('Post-flip')
+%     elseif i == 2
+%         xlabel('Reach direction error (degrees)')
+%     end
+%     box off
 end
 
 %%
@@ -155,7 +177,7 @@ for j = 1:3
         late = bin(a);
         
         subplot(3,4,i)
-        histogram(dirError{j}(early,:)*180/pi,edges,'Normalization','pdf')
+        histogram(dirError{j}(early,:),edges,'Normalization','pdf')
         xticks(-180:90:180)
         ylim([0 .04])
         if i == 1
@@ -170,7 +192,7 @@ for j = 1:3
         end
         
         subplot(3,4,i+4)
-        histogram(dirError{j}(late,:)*180/pi,edges,'Normalization','pdf')
+        histogram(dirError{j}(late,:),edges,'Normalization','pdf')
         xticks(-180:90:180)
         ylim([0 .04])
         if i == 1
@@ -178,7 +200,7 @@ for j = 1:3
         end
         
         subplot(3,4,i+8)
-        histogram(dirError{j}(post,:)*180/pi,edges,'Normalization','pdf')
+        histogram(dirError{j}(post,:),edges,'Normalization','pdf')
         xticks(-180:90:180)
         ylim([0 .04])
         xlabel('Error (degrees)')
