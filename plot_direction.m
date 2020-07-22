@@ -1,59 +1,64 @@
 function plot_direction(d)
 
 groups = {'rot','mir'}; % names of groups
-blocks = {'baseline','pert1','pert2','pert3'}; % names of the blocks
+Nsubj = length(d.rot); % number of subjects
+Ntrials = length(d.(groups{1}){1}.Cr); % number of trials
 
-col = lines;
-col = col(1:7,:);
-Nsubj = length(d.rot);
-Ntrials = length(d.(groups{1}){1}.Cr);
-Ntrials2 = Ntrials/length(blocks);
+% colors for heat map
+col1 = [1 1 1]; % RGB for white
+col2 = [0 0 1]; % RGB for blue
+Nstep = 100;
+map = [linspace(col1(1),col2(1),Nstep)', linspace(col1(2),col2(2),...
+    Nstep)', linspace(col1(3),col2(3),Nstep)'];
 
+% loop for plotting figure
 for i = 1:length(groups)
-    dir = NaN(Ntrials,Nsubj);
-
+    dir_all = NaN(Ntrials,Nsubj);
+    
+    % store all reach direction error into dir_all
     for j = 1:Nsubj
-        dir(:,j) = d.(groups{i}){j}.initDir-pi/2;
+        % reach direction error is centered around pi/2 so subtract off
+        % pi/2
+        dir_all(:,j) = d.(groups{i}){j}.initDir-pi/2; 
+    end
+    
+    % unwrap error to be [-pi, pi)
+    for j = 1:numel(dir_all)
+        while abs(dir_all(j)) >= pi
+            if dir_all(j) >= pi
+                dir_all(j) = dir_all(j) - 2*pi;
+            else
+                dir_all(j) = dir_all(j) + 2*pi;
+            end
+        end
+    end
+    
+    edges = -180:10:180; % bins for reach direction error
+    bin = 15; % size of bin for trials
+    
+    % calculate intensity of colors for heat map
+    for j = 1:size(dir_all,1)/bin
+        dir2 = dir_all(bin*(j-1)+1:bin*(j-1)+bin,:);
+        dir2 = reshape(dir2,[numel(dir2) 1]);
+        dirBin(:,j) = histcounts(dir2*180/pi,edges);
     end
 
-    dir = unwrap(dir);
-    se = (circ_std(dir,[],[],2)/sqrt(Nsubj))*180/pi;
-    
-    dirBin2 = reshape(dir,[3 size(dir,1)/3 Nsubj]);
-    dirBin2 = squeeze(circ_mean(dirBin2,[],1));
-    dirBin = circ_mean(dirBin2,[],2)*180/pi;
-    seBin = (circ_std(dirBin2,[],[],2)/sqrt(Nsubj))*180/pi;
-    
-    dir = circ_mean(dir,[],2)*180/pi;
-    edges = -50:10:130;
-    
-    % plot reach error binned by 3 trials
+    % plot reach error
     figure(1);
-    subplot(1,2,i); hold on
-    x = shadedErrorBar(1:150,dir(1:150),se(1:150));
-    editErrorBar(x,[0 0 0],1);
-    plot([1000 1001],[1000 1001],'b','LineWidth',1)
-    x = shadedErrorBar(151:300,dir(151:300),se(151:300));
-    editErrorBar(x,[0 0 0],1);
-    x = shadedErrorBar(301:450,dir(301:450),se(301:450));
-    editErrorBar(x,[0 0 0],1);
-    x = shadedErrorBar(451:600,dir(451:600),se(451:600));
-    editErrorBar(x,[0 0 0],1);
-    plot([-5 1000],[0 0],'--k','LineWidth',1)
-    rectangle('Position',[1 -200 Ntrials2 400],'FaceColor',[col(1,:) 0.1],'EdgeColor','none')
-    rectangle('Position',[Ntrials2+1 -200 Ntrials2 400],'FaceColor',[col(2,:) 0.1],'EdgeColor','none')
-    rectangle('Position',[3*Ntrials2+1 -200 Ntrials2 400],'FaceColor',[col(3,:) 0.1],'EdgeColor','none')
-    if i == 1
-        title('Rotation')
-        ylabel(['Reach Direction Error (',char(176),')'])
-    else
-        title('Mirror Reversal')
-    end
+    subplot(2,1,i); hold on
+    imagesc(dirBin,[0 80])
+    colormap(map)
     set(gca,'TickDir','out')
-    axis([101 600 -90 90])
-    xticks([101 151 301 451 600])
-    yticks(-90:45:90)
-    xlabel('Trial Number')
+    box off
+    axis([0.5 150/bin*4+0.5 0.5 36.5])
+    xticks(0.5:150/bin:150/bin*3+0.5)
+    xticklabels({'Baseline','Early','','Late'})
+    colorbar('Ticks',0:20:80)
+    if i == 1
+        ylabel(['Reach Direction Error (',char(176),')'])
+    end
+    yticks(0.5:6:36.5)
+    yticklabels({'-180','-120','-60','0','60','120','180'})
 end
 
 end
