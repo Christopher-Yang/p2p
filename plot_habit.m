@@ -39,28 +39,40 @@ legend({'Horizontal position','Vertical position'})
 %% organize data into easily plottable variables
 groups = {'day2','day5','day10'};
 Nsubj = [length(d.day2) length(d.day5) length(d.day10)];
-Nblock = 3;
 Ngroup = length(groups);
 Ntrial = 100;
+
+trials{1} = 1:30;
+trials{2} = 31:130;
+trials{3} = 131:230;
+trials{4} = 231:330;
+trials{5} = 331:430;
+trials{6} = 431:530;
+
+gblock = [1 2 3 4
+          1 2 4 5
+          1 2 5 6];
+      
+Nblock = size(gblock,2);
 
 for i = 1:Ngroup
     for j = 1:Nblock
         for k = 1:Nsubj(i)
-            a = d.(groups{i}){k}.incorrectReach_x((j-1)*100+1:(j-1)*100+100);
+            a = d.(groups{i}){k}.incorrectReach_x(trials{gblock(i,j)});
             num.x.(groups{i})(k,j) = nansum(a);
             den.x.(groups{i})(k,j) = 100-sum(isnan(a));
             habit.x.(groups{i})(k,j) = 100*num.x.(groups{i})(k,j)/den.x.(groups{i})(k,j);
             
-            a = d.(groups{i}){k}.incorrectReach_y((j-1)*100+1:(j-1)*100+100);
+            a = d.(groups{i}){k}.incorrectReach_y(trials{gblock(i,j)});
             num.y.(groups{i})(k,j) = nansum(a);
             den.y.(groups{i})(k,j) = 100-sum(isnan(a));
             habit.y.(groups{i})(k,j) = 100*num.y.(groups{i})(k,j)/den.y.(groups{i})(k,j);
+%             
+%             pathLength.(groups{i})(k,j) = mean(d.(groups{i}){k}.pathlength((j-1)*100+1:(j-1)*100+100));
+%             movTime.(groups{i})(k,j) = mean(d.(groups{i}){k}.movtime((j-1)*100+1:(j-1)*100+100))/1000;
+%             RT.(groups{i})(k,j) = mean(d.(groups{i}){k}.RT((j-1)*100+1:(j-1)*100+100))/1000;
             
-            pathLength.(groups{i})(k,j) = mean(d.(groups{i}){k}.pathlength((j-1)*100+1:(j-1)*100+100));
-            movTime.(groups{i})(k,j) = mean(d.(groups{i}){k}.movtime((j-1)*100+1:(j-1)*100+100))/1000;
-            RT.(groups{i})(k,j) = mean(d.(groups{i}){k}.RT((j-1)*100+1:(j-1)*100+100))/1000;
-            
-            lag.(groups{i})(:,k,j) = d.(groups{i}){k}.lag((j-1)*100+1:(j-1)*100+100)/1000;
+%             lag.(groups{i})(:,k,j) = d.(groups{i}){k}.lag((j-1)*100+1:(j-1)*100+100)/1000;
         end
     end
 end

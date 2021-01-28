@@ -7,12 +7,14 @@ names{1} = {'subj1','subj3','subj4','subj5','subj6','subj7','subj8','subj9','sub
 names{2} = {'subj13','subj15','subj17','subj18','subj19','subj21','subj22','subj23','subj24','subj25','subj26','subj27','subj28','subj29'};
 names{3} = {'subj1','subj2','subj3','subj4','subj5'};
 path = {'Data/denovo_2day/','Data/denovo_5day/','Data/denovo_10day/'};
-blockNames{1} = {'B2','B5','B6_habit'};
-blockNames{2} = {'B2','B14','B15_habit'};
-blockNames{3} = {'B2','B29','B30_habit'};
-% blockNames{1} = {'B1_baseline','B5'};
-% blockNames{2} = {'B1_baseline','B14'};
-% blockNames{3} = {'B1_baseline','B29'};
+blockNames{1} = {'B1_baseline','B2','B5','B6_habit'};
+blockNames{2} = {'B1_baseline','B2','B5','B14','B15_habit'};
+blockNames{3} = {'B1_baseline','B2','B5','B14','B29','B30_habit'};
+
+% use for plot_tortuosity.m and plot_traj.m
+% blockNames{1} = {'B1_baseline','B2','B5'};
+% blockNames{2} = {'B1_baseline','B2','B5','B14'};
+% blockNames{3} = {'B1_baseline','B2','B5','B14','B29'};
 START = [0.6 0.25];
 
 for i = 1:length(names)

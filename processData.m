@@ -9,8 +9,15 @@ for i=1:data.Ntrials
     
     % compute velocities
     vel_Cr = diff(data.Cr{i})./(diff(data.time{i})/1000);
-    data.tanVel{i} = sqrt(sum(vel_Cr.^2,2));
-    data.pkVel(i) = max(data.tanVel{i});
+    data.tanVel{i} = sqrt(sum(vel_Cr.^2,2)); % tangential velocity
+    data.pkVel(i) = max(data.tanVel{i}); % peak tangential velocity
+    velFilt = sgolayfilt(data.tanVel{i},3,9); % smooth velocity trajectory
+    
+    % some of the differences in time are 0, leading to Inf velocities;
+    % replace with NaN
+    velFilt(velFilt == Inf) = NaN;
+    velFilt(velFilt == -Inf) = NaN;
+    data.velFilt{i} = velFilt;
     
     vel_C = diff(data.C{i})./(diff(data.time{i})/1000);
     

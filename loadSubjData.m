@@ -19,7 +19,7 @@ for blk=1:Nblocks
 
         L{trial} = d(:,1:2); % left hand X and Y
         R{trial} = d(:,3:4); % right hand X and Y
-        C{trial} = d(:,5:6);% cursor X and Y
+        C{trial} = d(:,5:6); % cursor X and Y
         N{trial} = [L{trial}(:,1) R{trial}(:,2)]; % null space movements
 
         % absolute target location
@@ -65,12 +65,12 @@ for blk=1:Nblocks
             targBin(trial) = 3;
         end
         
-        ip = find(d(:,8));
-        if(isempty(ip))
-            ipertonset(trial) = NaN; % time of perturbation onset
+        itarg = find(d(:,7)==3); % time of target movement
+        if(isempty(itarg))
+            itargonset = 1;
         else
-            ipertonset(trial) = min(ip);
-        end
+            itargonset(trial) = min(itarg);
+        end        
         
         imov = find(d(:,7)==4); % time of movement onset
         if(isempty(imov))
@@ -107,7 +107,7 @@ data.pert = pert;
 
 data.state = state;
 data.time = time;
-data.ipertonset = ipertonset;
+data.itargonset = itargonset;
 data.imoveonset = imoveonset;
 
 data.subjname = subjname;
