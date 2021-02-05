@@ -1,29 +1,36 @@
 %% align velocity to target presentation
 
-clear vel
+clear vel 
 blocks = {'Baseline','Early','Late'};
 groups = {'day2','day5','day10'};
 graph_names = {'2-day','5-day','10-day'};
 Nsubj = [13 14 5];
-Ntrials = [330 430 530];
 Ngroup = 3;
+
+% indices for dividing up the trials into blocks
 trials{1} = 1:30;
-trials{2} = 31:130;
-trials{3} = 131:230;
-trials{4} = 231:330;
-trials{5} = 331:430;
-trials{6} = 431:530;
+for i = 1:29
+    trials{i+1} = (i-1)*100 + 31:(i-1)*100 + 130;
+end
+
+% blocks for baseline, early, and late for each group
+gblocks = [1 2 5
+          1 2 14
+          1 2 29];
 
 for k = 1:Ngroup
+    Nmax = [];
     for j = 1:Nsubj(k)
         a = d.(groups{k}){j};
         Nmax(j) = max(cellfun('size',a.velFilt,1));
     end
     
+    vel{k} = NaN(max(Nmax),230,Nsubj(k));
     for j = 1:Nsubj(k)
         a = d.(groups{k}){j};
-        for i = 1:Ntrials(k)
-            v = a.velFilt{i}(a.itargonset(i):end);
+        trialIdx = [trials{gblocks(k,:)}];
+        for i = 1:length(trialIdx)
+            v = a.velFilt{trialIdx(i)}(a.itargonset(trialIdx(i)):end);
             vel{k}(1:length(v),i,j) = v;
         end
     end
@@ -31,9 +38,7 @@ end
 
 %% plot results
 delt = 1/130;
-gblock = [1 2 3 
-          1 2 4 
-          1 2 5];
+
 col = [0 0 0
        0 191 255
        255 99 71]./255;
@@ -44,13 +49,13 @@ for i = 1:Ngroup
     
     subplot(1,3,i); hold on
     for j = 1:3
-        v = nanmean(vel{i}(:,trials{gblock(i,j)},:),2);
-        s = shadedErrorBar(xAxis,nanmean(v,3),std(v,[],3)); % baseline
+        v = nanmean(vel{i}(:,trials{j},:),2);
+        s = shadedErrorBar(xAxis,nanmean(v,3),std(v,[],3)/sqrt(Nsubj(i))); % baseline
         editErrorBar(s,col(j,:),1);
     end
     axis([0 2 0 0.4])
     title(graph_names{i})
-    xlabel('Time (s)')
+    xlabel('Time from target onset (s)')
     if i == 1
         ylabel('Velocity')
     elseif i == 3
@@ -59,8 +64,6 @@ for i = 1:Ngroup
 end
 
 %%
-gblock = [3 4 5];
-
 figure(2); clf
 for i = 1:3
     xAxis = 0:delt:size(vel{i},1)*delt - delt;
@@ -76,9 +79,9 @@ for i = 1:3
     end
     
     subplot(2,3,i+3); hold on % plot late learning
-    v = reshape(vel{i}(:,trials{gblock(i)},:),[length(xAxis) 100*Nsubj(i)]);
+    v = reshape(vel{i}(:,131:230,:),[length(xAxis) 100*Nsubj(i)]);
     plot(xAxis,v,'Color',[0 0 0 0.02])
-    plot(xAxis,nanmean(nanmean(vel{i}(:,trials{gblock(i)},:),2),3),'r','LineWidth',2)
+    plot(xAxis,nanmean(nanmean(vel{i}(:,131:230,:),2),3),'r','LineWidth',2)
     axis([0 2 0 0.6])
     xlabel('Time (s)')
     if i == 1

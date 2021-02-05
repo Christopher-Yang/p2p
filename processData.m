@@ -7,23 +7,37 @@ for i=1:data.Ntrials
     data.Nr{i} = savgolayFilt(data.Nr{i}',3,7)';
     data.C{i} = savgolayFilt(data.C{i}',3,7)';
     
+    % remove outliers in time difference for velocity analysis (extremely
+    % high or low values are due to problems in data collection hardware
+    % and result in extreme velocity values)
+    timeDiff = diff(data.time{i}); % find time between samples
+    timeDiff(timeDiff > 11) = NaN; % eliminate times greater than 11 ms
+    timeDiff(timeDiff < 5) = NaN; % eliminate times less than 5 ms
+    timeDiff = timeDiff/1000;
+    
+    if sum(isnan(timeDiff))
+        i;
+    end
+    
     % compute velocities
-    vel_Cr = diff(data.Cr{i})./(diff(data.time{i})/1000);
+    vel_C = diff(data.C{i})./timeDiff; % cursor velocity unrotated
+    vel_Cr = diff(data.Cr{i})./timeDiff; % cursor velocity rotated
     data.tanVel{i} = sqrt(sum(vel_Cr.^2,2)); % tangential velocity
     data.pkVel(i) = max(data.tanVel{i}); % peak tangential velocity
     velFilt = sgolayfilt(data.tanVel{i},3,9); % smooth velocity trajectory
     
     % some of the differences in time are 0, leading to Inf velocities;
     % replace with NaN
-    velFilt(velFilt == Inf) = NaN;
-    velFilt(velFilt == -Inf) = NaN;
+%     velFilt(velFilt == Inf) = NaN;
+%     velFilt(velFilt == -Inf) = NaN;
     data.velFilt{i} = velFilt;
-    
-    vel_C = diff(data.C{i})./(diff(data.time{i})/1000);
     
     data.go(i) = min(find(data.state{i}==3)); % time of go cue
     data.init(i) = min(find(data.state{i}==4)); % time of movement initiation
     data.end(i) = max(find(data.state{i}==4)); % time of movement end
+    
+    data.initVel(i) = data.tanVel{i}(data.init(i)+20);
+    data.initVel_filt(i) = velFilt(data.init(i)+20);
     
     %% identify initial reach direction in x- and y-axes 
     if i == 1
@@ -36,22 +50,22 @@ for i=1:data.Ntrials
     
     if sum(threshold_y) == 0
         data.init_y(i) = NaN;
-        data.initDir_y(i) = NaN;
+        data.initVel_y(i) = NaN;
         data.incorrectReach_y(i) = NaN;
     else
         data.init_y(i) = min(find(threshold_y==1));
         if data.init_y(i)+20 > size(vel_C,1)
             data.init_y(i) = NaN;
-            data.initDir_y(i) = NaN;
+            data.initVel_y(i) = NaN;
             data.incorrectReach_y(i) = NaN;
         else
-            data.initDir_y(i) = vel_C(data.init_y(i)+20,2);
+            data.initVel_y(i) = vel_C(data.init_y(i)+20,2);
             
             % incorrectReach_y = 1 if there is a habit, incorrectReach_y = 0 if there's no
             % habit
-            if data.targetRel(i,2) < 0 && data.initDir_y(i) > 0
+            if data.targetRel(i,2) < 0 && data.initVel_y(i) > 0
                 data.incorrectReach_y(i) = 1;
-            elseif data.targetRel(i,2) > 0 && data.initDir_y(i) < 0
+            elseif data.targetRel(i,2) > 0 && data.initVel_y(i) < 0
                 data.incorrectReach_y(i) = 1;
             else
                 data.incorrectReach_y(i) = 0;
@@ -61,22 +75,22 @@ for i=1:data.Ntrials
     
     if sum(threshold_x) == 0
         data.init_x(i) = NaN;
-        data.initDir_x(i) = NaN;
+        data.initVel_x(i) = NaN;
         data.incorrectReach_x(i) = NaN;
     else
         data.init_x(i) = min(find(threshold_x==1));
         if data.init_x(i)+20 > size(vel_C,1)
             data.init_x(i) = NaN;
-            data.initDir_x(i) = NaN;
+            data.initVel_x(i) = NaN;
             data.incorrectReach_x(i) = NaN;
         else
-            data.initDir_x(i) = vel_C(data.init_x(i)+20,1);
+            data.initVel_x(i) = vel_C(data.init_x(i)+20,1);
             
             % incorrectReach_x = 1 if there is a habit, incorrectReach_x = 0 if there's no
             % habit
-            if data.targetRel(i,1) < 0 && data.initDir_x(i) > 0
+            if data.targetRel(i,1) < 0 && data.initVel_x(i) > 0
                 data.incorrectReach_x(i) = 1;
-            elseif data.targetRel(i,1) > 0 && data.initDir_x(i) < 0
+            elseif data.targetRel(i,1) > 0 && data.initVel_x(i) < 0
                 data.incorrectReach_x(i) = 1;
             else
                 data.incorrectReach_x(i) = 0;
@@ -84,7 +98,6 @@ for i=1:data.Ntrials
         end
     end
     
-    %%
     % should technically use data.init_x(i)+20 and similar for init_y, but
     % on some trials the initiation time is close to the end of the trial,
     % meaning the reach ends before adding on 150 ms 
@@ -111,16 +124,19 @@ for i=1:data.Ntrials
     data.iDir(i) = data.init(i)+20; % 100 ms (13 time steps) after initiation
     data.initDir(i) = atan2(vel_Cr(data.iDir(i),2),vel_Cr(data.iDir(i),1));
     data.initDir(i) = data.initDir(i)-pi/2;
-    while data.initDir(i) > pi
+    while data.initDir(i) >= pi
         data.initDir(i) = data.initDir(i)-2*pi;
     end
     while data.initDir(i) < -pi
         data.initDir(i) = data.initDir(i)+2*pi;
     end
+    if isnan(data.initDir(i))
+        dL;
+    end
     
     data.initDir_noRot(i) = atan2(vel_C(data.iDir(i),2),vel_C(data.iDir(i),1));
     data.initDir_noRot(i) = data.initDir_noRot(i);
-    while data.initDir_noRot(i) > pi
+    while data.initDir_noRot(i) >= pi
         data.initDir_noRot(i) = data.initDir_noRot(i)-2*pi;
     end
     while data.initDir_noRot(i) < -pi

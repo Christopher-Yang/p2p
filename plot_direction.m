@@ -6,21 +6,26 @@ names = {'day2','day5','day10'};
 blocks = {'Baseline','Early','Late'};
 Ngroup = length(groups);
 Nblock = length(blocks);
-gblocks = [1 2 3; 1 2 4; 1 2 5]; % blocks for baseline, early, and late for each group
 allSubj = [length(d.day2) length(d.day5) length(d.day10)];
 
 % indices for dividing up the trials into blocks
 trials{1} = 1:30;
-trials{2} = 31:130;
-trials{3} = 131:230;
-trials{4} = 231:330;
-trials{5} = 331:430;
-trials{6} = 431:530;
+for i = 1:29
+    trials{i+1} = (i-1)*100 + 31:(i-1)*100 + 130;
+end
+
+% blocks for baseline, early, and late for each group
+gblocks = [1 2 5
+          1 2 14
+          1 2 29];
 
 % set colors for generating plots
 col = lines;
 col = col(1:7,:);
-
+col2 = [180 180 0
+        0 191 255
+        255 99 71]./255;
+    
 % store all reach direction errors into dirError
 for i = 1:Ngroup
     Ntrials = length(d.(groups{i}){1}.Cr);
@@ -52,6 +57,7 @@ for k = 1:Ngroup % loop over groups
         trial = trials{gblocks(k,j)};
         samples = dirError{k}(trial,:)*pi/180; % convert errors into radians
         samples = reshape(samples, [numel(samples) 1]); % convert matrix to vector
+        samples = samples(~isnan(samples));
         
         % initialize mu and kappa for the VM distribution and the relative
         % weight between the VM and uniform distributions
@@ -104,8 +110,7 @@ for k = 1:Ngroup % loop over groups
         weight_opt(j,k) = weight;
         
         % calculate circular standard deviation
-        m1 = (besseli(1,kappa)/besseli(0,kappa))*exp(1j*mu); % first moment
-        R = abs(m1);
+        R = (besseli(1,kappa)/besseli(0,kappa));
         sd(j,k) = sqrt(-2 * log(R)); % standard deviation
     end
 end
@@ -210,6 +215,7 @@ for k = 1:Ngroup
             % select trials to analyze and store in samples
             trial = trials{gblocks(k,j)};
             samples = dirError{k}(trial,m)*pi/180; % convert error to radians
+            samples = samples(~isnan(samples));
             
             % initialize mu and kappa for the VM distribution and the 
             % relative weight between the VM and uniform distributions
@@ -264,29 +270,51 @@ for k = 1:Ngroup
             weight_opt(j,k,m) = weight;
             
             % compute circular standard deviation
-            m1 = (besseli(1,kappa)/besseli(0,kappa))*exp(1j*mu); % first moment
-            R = abs(m1);
+            R = (besseli(1,kappa)/besseli(0,kappa));
             sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
         end
     end
 end
 
+%%
+rng(2);
+% points to assess the PDF
+delt = pi/64;
+x = -pi:delt:pi-delt;
+
 % mean and standard deviation of the circular standard deviation
 sd_mu = nanmean(sd,3);
 sd_sd = nanstd(sd,[],3);
 
+sd2 = permute(sd,[1 3 2]);
+
 % plot the mean and standard deviation of the standard deviations
 figure(4); clf; hold on
 for i = 1:3
-    errorbar([0 4 8]+i, sd_mu(:,i)*180/pi, sd_sd(:,i)*180/pi, '.', 'Color', col(i,:), 'LineWidth', 2, 'MarkerSize', 20)
+    plot(repmat([0 5 10]', [1 14]) + (rand(3,14)-0.5) + 1.5*i, sd2(:,:,i)*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
+    plot([0 5 10] + 1.5*i, sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
 end
 ylabel('St dev of von Mises distribution')
-xticks(2:4:10)
+xlim([0.5 15.5])
+xticks(3:5:18)
+yticks(0:20:80)
 xticklabels(blocks)
 legend(graph_names)
+set(gca,'Tickdir','out')
+
+print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/stdev','-dpdf','-painters')
+
+%%
+sd2 = permute(sd,[1 3 2]);
+
+figure(15); clf; hold on
+for i = 1:3
+    plot((1:3) + (i-1)*4, sd2(:,:,i), 'Color', [col(i,:) 0.6])
+    plot((1:3) + (i-1)*4, nanmean(sd2(:,:,i),2), '.', 'Color', col(i,:), 'MarkerSize', 20)
+end
 
 % plot PDF on top of data histograms
-subj = 1;
+subj = 2;
 figure(5); clf
 for j = 1:Nblock
     for k = 1:Ngroup
@@ -367,26 +395,38 @@ ylabel('Standard deviation of directional error (degrees)')
 legend(graph_names)
 
 %% plot kernel density estimates
+col2 = [0 0 0
+        0 191 255
+        255 99 71]./255;
+
 figure(8); clf
 for i = 1:Ngroup
     for j = 1:3
         trial = trials{gblocks(i,j)};
         subplot(1,3,j); hold on
         [f,xi] = ksdensity(reshape(dirError{i}(trial,:),[numel(dirError{i}(trial,:)) 1]));
-        plot(xi,f,'LineWidth',2)
+        plot(xi,f,'LineWidth',2,'Color',col2(i,:))
         if i == 3
             title(blocks{j})
             axis([-180 180 0 .06])
             xticks(-180:90:180)
-            yticks(0:0.01:0.06)
             box off
+            set(gca,'Tickdir','out')
             if j == 1
-                ylabel('Probability')
+                ylabel('Kernel-smoothed probability density')
+                yticks(0:0.02:0.06)
+            elseif j == 2
+                xlabel('Reach direction error (degrees)')
+                yticks([])
+            elseif j == 3
+                yticks([])
             end
         end
     end
 end
+legend(graph_names)
 
+% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/ksdensity','-dpdf','-painters')
 %%
 Ntrials2 = 100;
 trialsAll = {1:100,101:200,201:300};

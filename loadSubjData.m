@@ -8,9 +8,7 @@ Nblocks = length(blocknames);
 trial = 1;
 tFileFull = [];
 for blk=1:Nblocks
-    %disp(['Subject ',subjname,', ','Block: ',blocknames(blk)]);
     path = [subjname,'/',blocknames{blk}];
-    %disp(path);
     tFile = dlmread([path,'/tFile.tgt'],' ',0,0);
     fnames = dir(path);
     Ntrials = size(tFile,1);
@@ -35,35 +33,22 @@ for blk=1:Nblocks
         targetRel(trial,:) = targetAbs(trial,:)-start(trial,:);
         pert(trial) = tFile(j,5);
         
-        targAng(trial) = atan2(targetRel(trial,2),targetRel(trial,1));
+        tAng = atan2(targetRel(trial,2),targetRel(trial,1));
+        targAng(trial) = tAng;
         
         % target position bin relative to mirror axis; bins numbered from 1
         % (closest)-4 (furthest)
-        if targAng(trial)>pi/8 && targAng(trial)<3*pi/8
-            targBin(trial) = 1;
-        elseif targAng(trial)<-5*pi/8 && targAng(trial)>-7*pi/8
-            targBin(trial) = 1;
-        elseif targAng(trial)>5*pi/8 && targAng(trial)<7*pi/8
-            targBin(trial) = 4;
-        elseif targAng(trial)<-pi/8 && targAng(trial)>-3*pi/8
-            targBin(trial) = 4;
-        elseif targAng(trial)>0 && targAng(trial)<pi/8
-            targBin(trial) = 2;
-        elseif targAng(trial)>3*pi/8 && targAng(trial)<pi/2
-            targBin(trial) = 2;
-        elseif targAng(trial)<-pi/2 && targAng(trial)>-5*pi/8
-            targBin(trial) = 2;
-        elseif targAng(trial)<-7*pi/8 && targAng(trial)>-pi
-            targBin(trial) = 2;
-        elseif targAng(trial)>pi/2 && targAng(trial)<5*pi/8
-            targBin(trial) = 3;
-        elseif targAng(trial)>7*pi/8 && targAng(trial)<pi
-            targBin(trial) = 3;
-        elseif targAng(trial)<0 && targAng(trial)>-pi/8
-            targBin(trial) = 3;
-        elseif targAng(trial)<-3*pi/8 && targAng(trial) >-pi/2
-            targBin(trial) = 3;
+        if (tAng>=pi/8 && tAng<3*pi/8) || (tAng<-5*pi/8 && tAng>=-7*pi/8)
+            tBin = 1;
+        elseif (tAng>=0 && tAng<pi/8) || (tAng>=3*pi/8 && tAng<pi/2) || (tAng<-pi/2 && tAng>=-5*pi/8) || (tAng<-7*pi/8 && tAng>=-pi)
+            tBin = 2;
+        elseif (tAng>=pi/2 && tAng<5*pi/8) || (tAng>=7*pi/8 && tAng<pi) || (tAng<0 && tAng>=-pi/8) || (tAng<-3*pi/8 && tAng >=-pi/2)
+            tBin = 3;
+        elseif (tAng>=5*pi/8 && tAng<7*pi/8) || (tAng<-pi/8 && tAng>=-3*pi/8)
+            tBin = 4;
         end
+        
+        targBin(trial) = tBin;
         
         itarg = find(d(:,7)==3); % time of target movement
         if(isempty(itarg))
@@ -85,8 +70,6 @@ for blk=1:Nblocks
     end
     tFileFull = [tFileFull; tFile(:,1:5)]; % copy of trial table
 end
-Lc = L;
-Rc = R;
 
 % compute target angle
 % data.targAng = atan2(targetRel(:,2),targetRel(:,1));
@@ -110,17 +93,11 @@ data.time = time;
 data.itargonset = itargonset;
 data.imoveonset = imoveonset;
 
-data.subjname = subjname;
 data.blocknames = blocknames;
 
 % placeholders - these will be computed later
-d0 = 0;
-data.rPT = d0;
-data.reachDir = d0;
-data.d_dir = d0;
-data.RT = d0;
-data.iDir = d0;
-data.iEnd = d0;
+% data.RT = d0;
+% data.iDir = d0;
 
 data.targetAbs = targetAbs;
 data.targetRel = targetRel;
