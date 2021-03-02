@@ -275,7 +275,6 @@ for k = 1:Ngroup
         end
     end
 end
-
 %%
 rng(2);
 % points to assess the PDF
@@ -289,16 +288,41 @@ sd_sd = nanstd(sd,[],3);
 sd2 = permute(sd,[1 3 2]);
 
 % plot the mean and standard deviation of the standard deviations
+% figure(4); clf; hold on
+% for i = 1:3
+%     plot(repmat([0 5 10]', [1 14]) + (rand(3,14)-0.5) + 1.5*i, sd2(:,:,i)*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
+%     plot([0 5 10] + 1.5*i, sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
+% end
+% ylabel('St dev of von Mises distribution')
+% xlim([0.5 15.5])
+% xticks(3:5:18)
+% yticks(0:20:80)
+% xticklabels(blocks)
+% legend(graph_names)
+% set(gca,'Tickdir','out')
+
+xAxis = [0.5 1 1.5
+         2.5 3 3.5
+         5 11 21];
+
+xAxis1 = [0.5 1 1.5];
+xAxis2 = [2.5 3 3.5];
+xAxis3 = [5 11 21];
 figure(4); clf; hold on
 for i = 1:3
-    plot(repmat([0 5 10]', [1 14]) + (rand(3,14)-0.5) + 1.5*i, sd2(:,:,i)*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
-    plot([0 5 10] + 1.5*i, sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
+    for j = 1:3
+        plot(xAxis(j,i) + 0.5*(rand(1,14)-0.5), squeeze(sd2(j,:,i))*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
+    end
 end
+for i = 1:3
+    plot(xAxis(:,i), sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
+end
+xticks([1 3 5 11 21])
+xticklabels({'Baseline','1','2','5','10'})
+xlabel('Day')
 ylabel('St dev of von Mises distribution')
-xlim([0.5 15.5])
-xticks(3:5:18)
-yticks(0:20:80)
-xticklabels(blocks)
+xlim([0 22])
+yticks(0:20:100)
 legend(graph_names)
 set(gca,'Tickdir','out')
 
@@ -483,15 +507,14 @@ box off
 
 %%
 edges = -180:10:180;
-for j = 1:3
+for j = 1:Ngroup
     figure(6+j-1); clf
     for i = 1:4
-        bin = find(bins{j}==i);
-        early = bin(bin<=100);
-        post = bin(bin>200);
-        a = (bin<=100)+(bin>200);
-        a = ~a;
-        late = bin(a);
+        bin = bins{j}==i;
+        binTrials = find(bins{j} == i);
+        early = binTrials(logical((binTrials>=trials{2}(1)) + (binTrials<=trials{2}(end))-1));
+        late = binTrials(logical((binTrials>=trials{gblocks(j,3)}(1)) + (binTrials<=trials{gblocks(j,3)}(end))-1));
+        post = binTrials(logical((binTrials>=trials{gblocks(j,3)+1}(1)) + (binTrials<=trials{gblocks(j,3)+1}(end))-1));
         
         subplot(3,4,i)
         histogram(dirError{j}(early,:),edges,'Normalization','pdf')

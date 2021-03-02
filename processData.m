@@ -3,9 +3,9 @@ function data = processData(data)
 
 for i=1:data.Ntrials
     % smooth trajectories
-    data.Cr{i} = savgolayFilt(data.Cr{i}',3,7)';
-    data.Nr{i} = savgolayFilt(data.Nr{i}',3,7)';
-    data.C{i} = savgolayFilt(data.C{i}',3,7)';
+    data.Cr{i} = sgolayfilt(data.Cr{i},3,7);
+    data.Nr{i} = sgolayfilt(data.Nr{i},3,7);
+    data.C{i} = sgolayfilt(data.C{i},3,7);
     
     % remove outliers in time difference for velocity analysis (extremely
     % high or low values are due to problems in data collection hardware
@@ -15,16 +15,16 @@ for i=1:data.Ntrials
     timeDiff(timeDiff < 5) = NaN; % eliminate times less than 5 ms
     timeDiff = timeDiff/1000;
     
-    if sum(isnan(timeDiff))
-        i;
-    end
-    
     % compute velocities
     vel_C = diff(data.C{i})./timeDiff; % cursor velocity unrotated
     vel_Cr = diff(data.Cr{i})./timeDiff; % cursor velocity rotated
+    vel_Cr_mir = diff(data.Cr_mir{i})./timeDiff;
+    
     data.tanVel{i} = sqrt(sum(vel_Cr.^2,2)); % tangential velocity
     data.pkVel(i) = max(data.tanVel{i}); % peak tangential velocity
     velFilt = sgolayfilt(data.tanVel{i},3,9); % smooth velocity trajectory
+    vel_C = sgolayfilt(vel_C,3,9);
+    data.vel_C = vel_C;
     
     % some of the differences in time are 0, leading to Inf velocities;
     % replace with NaN
@@ -121,26 +121,36 @@ for i=1:data.Ntrials
     data.pathlength_null(i) = sum(dL);
     
     % compute initial reach direction
-    data.iDir(i) = data.init(i)+20; % 100 ms (13 time steps) after initiation
-    data.initDir(i) = atan2(vel_Cr(data.iDir(i),2),vel_Cr(data.iDir(i),1));
-    data.initDir(i) = data.initDir(i)-pi/2;
-    while data.initDir(i) >= pi
-        data.initDir(i) = data.initDir(i)-2*pi;
+    iDir = data.init(i)+20; % 100 ms (13 time steps) after initiation
+    initDir = atan2(vel_Cr(iDir,2),vel_Cr(iDir,1));
+    initDir = initDir-pi/2;
+    while initDir >= pi
+        initDir = initDir-2*pi;
     end
-    while data.initDir(i) < -pi
-        data.initDir(i) = data.initDir(i)+2*pi;
-    end
-    if isnan(data.initDir(i))
-        dL;
+    while initDir < -pi
+        initDir = initDir+2*pi;
     end
     
-    data.initDir_noRot(i) = atan2(vel_C(data.iDir(i),2),vel_C(data.iDir(i),1));
-    data.initDir_noRot(i) = data.initDir_noRot(i);
-    while data.initDir_noRot(i) >= pi
-        data.initDir_noRot(i) = data.initDir_noRot(i)-2*pi;
+    initDir_mir = atan2(vel_Cr_mir(iDir,2),vel_Cr_mir(iDir,1));
+    initDir_mir = initDir_mir-pi/2;
+    while initDir_mir >= pi
+        initDir_mir = initDir_mir-2*pi;
     end
-    while data.initDir_noRot(i) < -pi
-        data.initDir_noRot(i) = data.initDir_noRot(i)+2*pi;
+    while initDir_mir < -pi
+        initDir_mir = initDir_mir+2*pi;
     end
     
+    initDir_noRot = atan2(vel_C(iDir,2),vel_C(iDir,1));
+    initDir_noRot = initDir_noRot-pi/2;
+    while initDir_noRot >= pi
+        initDir_noRot = initDir_noRot-2*pi;
+    end
+    while initDir_noRot < -pi
+        initDir_noRot = initDir_noRot+2*pi;
+    end
+    
+    data.iDir(i) = iDir;
+    data.initDir(i) = initDir;
+    data.initDir_mir(i) = initDir_mir;
+    data.initDir_noRot(i) = initDir_noRot;
 end

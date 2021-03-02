@@ -38,16 +38,27 @@ for blk=1:Nblocks
         
         % target position bin relative to mirror axis; bins numbered from 1
         % (closest)-4 (furthest)
-        if (tAng>=pi/8 && tAng<3*pi/8) || (tAng<-5*pi/8 && tAng>=-7*pi/8)
+%         if (tAng>=pi/8 && tAng<3*pi/8) || (tAng<-5*pi/8 && tAng>=-7*pi/8)
+%             tBin = 1;
+%         elseif (tAng>=0 && tAng<pi/8) || (tAng>=3*pi/8 && tAng<pi/2) || (tAng<-pi/2 && tAng>=-5*pi/8) || (tAng<-7*pi/8 && tAng>=-pi)
+%             tBin = 2;
+%         elseif (tAng>=pi/2 && tAng<5*pi/8) || (tAng>=7*pi/8 && tAng<pi) || (tAng<0 && tAng>=-pi/8) || (tAng<-3*pi/8 && tAng >=-pi/2)
+%             tBin = 3;
+%         elseif (tAng>=5*pi/8 && tAng<7*pi/8) || (tAng<-pi/8 && tAng>=-3*pi/8)
+%             tBin = 4;
+%         end
+        
+        % target position bin relative to y-axis; bins numbered from 1
+        % (closest)-4 (furthest)
+        if (tAng>=3*pi/8 && tAng<5*pi/8) || (tAng>=-5*pi/8 && tAng<-3*pi/8)
             tBin = 1;
-        elseif (tAng>=0 && tAng<pi/8) || (tAng>=3*pi/8 && tAng<pi/2) || (tAng<-pi/2 && tAng>=-5*pi/8) || (tAng<-7*pi/8 && tAng>=-pi)
+        elseif (tAng>=2*pi/8 && tAng<3*pi/8) || (tAng>=5*pi/8 && tAng<6*pi/8) || (tAng>=-3*pi/8 && tAng<-2*pi/8) || (tAng>=-6*pi/8 && tAng<-5*pi/8)
             tBin = 2;
-        elseif (tAng>=pi/2 && tAng<5*pi/8) || (tAng>=7*pi/8 && tAng<pi) || (tAng<0 && tAng>=-pi/8) || (tAng<-3*pi/8 && tAng >=-pi/2)
+        elseif (tAng>=pi/8 && tAng<2*pi/8) || (tAng>=6*pi/8 && tAng<7*pi/8) || (tAng>=-2*pi/8 && tAng<-pi/8) || (tAng>=-7*pi/8 && tAng<-6*pi/8)
             tBin = 3;
-        elseif (tAng>=5*pi/8 && tAng<7*pi/8) || (tAng<-pi/8 && tAng>=-3*pi/8)
+        elseif (tAng>=7*pi/8 && tAng<pi) || (tAng>=-pi && tAng<-7*pi/8) || (tAng>=-pi/8 && tAng<pi/8)
             tBin = 4;
         end
-        
         targBin(trial) = tBin;
         
         itarg = find(d(:,7)==3); % time of target movement
@@ -111,6 +122,13 @@ for j=1:data.Ntrials % iterate through all trials
     
     data.Cr{j} = (R*(data.C{j}'-repmat(start(j,:),size(data.C{j},1),1)'))';
     data.Nr{j} = (R*(data.N{j}'))';
+    
+    targetMir = [0 1; 1 0]* data.targetRel(j,:)';
+    thetaMir(j) = atan2(targetMir(2),targetMir(1))-pi/2;
+    R = [cos(thetaMir(j)) sin(thetaMir(j)); -sin(thetaMir(j)) cos(thetaMir(j))];
+    
+    data.Cr_mir{j} = (R*(data.C{j}'-repmat(start(j,:),size(data.C{j},1),1)'))';
+    data.Nr_mir{j} = (R*(data.N{j}'))';
 end
 data.theta = theta;
-
+data.thetaMir = thetaMir;

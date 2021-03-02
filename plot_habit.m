@@ -41,13 +41,13 @@ end
 
 %% plot initial reach direction in x and y axes
 group = 'day10';
-subj = 3;
-trial = 2920;
+subj = 1;
+trial = 2831;
 
 a = d.(group){subj};
 t = (a.time{trial}-a.time{trial}(1))/1000;
 init = a.init_x(trial)+20;
-x = [t(init-30) t(init+30)];
+x = [t(init-20) t(init+20)];
 
 y = a.C{trial}(init,1)-a.C{trial}(1,1);
 m = a.initVel_x(trial);
@@ -63,7 +63,7 @@ plot(t(init),a.C{trial}(init,1)-a.C{trial}(1,1),'.k','MarkerSize',30,'HandleVisi
 plot(x,[m*x(1)+b m*x(2)+b],'k','LineWidth',3,'HandleVisibility','off')
 
 init = a.init_y(trial)+20;
-x = [t(init-30) t(init+30)];
+x = [t(init-20) t(init+20)];
 
 y = a.C{trial}(init,2)-a.C{trial}(1,2);
 m = a.initVel_y(trial);
@@ -151,18 +151,24 @@ col = [180 180 0
 
 rng(34);
 ax = {'x','y'};
+xAxis = [0.5 2.5 5 15
+         1 3 8 15.5
+         1.5 3.5 13 16];
 figure(3); clf
 for j = 1:2
     for i = 1:Ngroup
         subplot(1,2,j); hold on
         n = Nsubj(i);
-        plot(repmat([0 6 12 18],[n 1]) + (rand(n,4) - 0.5) + 1.5*i, habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
-        plot([0 6 12 18] + 1.5*i, mean(habit.(ax{j}).(groups{i}),1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1)
+%         plot(repmat([0 6 12 18],[n 1]) + (rand(n,4) - 0.5) + 1.5*i, habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
+%         plot([0 6 12 18] + 1.5*i, mean(habit.(ax{j}).(groups{i}),1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1)
+        plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
+        plot(xAxis(i,:), mean(habit.(ax{j}).(groups{i}),1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1)
         if i == 1
-            xticks(3:6:24)
-            xticklabels({'Baseline','Early','Late','Flip'})
+            xticks([1 3 5 8 13 15.5])
+            xticklabels({'Baseline',1,2,5,10,'Flip'})
+            xlabel('Day')
             set(gca,'TickDir','out')
-            axis([0.5 23.5 0 60])
+            axis([0 16.5 0 60])
             if j == 1
                 ylabel('Proportion of incorrect reaches')
                 title('Left hand')
@@ -173,15 +179,15 @@ for j = 1:2
     end
 end
 
-print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/habit','-dpdf','-painters')
+% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/habit','-dpdf','-painters')
 %% plot proportion of incorrect reaches binned by distance from mirroring axis
 
 for m = 1:4 % loop over target direction bins
     for i = 1:Ngroup
         for j = 1:Nblock
+            trialIdx = trials{gblocks(i,j)};
             for k = 1:Nsubj(i)
                 data = d.(groups{i}){k};
-                trialIdx = trials{gblocks(i,j)};
                 idx = find(data.targBin(trialIdx) == m);
                 overlap = data.incorrectReach_x(trialIdx(1)-1 + idx);
                 habit2.(groups{i})(k,j,m) = nansum(overlap)/sum(~isnan(overlap));
