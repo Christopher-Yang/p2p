@@ -8,8 +8,8 @@ function output = loadSubjData(path)
 disp('Loading...');
 
 % fields from data file to be analyzed
-fields = {'time','cursorX_hand','cursorY_hand','begin'};
-fields2 = {'extraTime','extraCursorX_hand','extraCursorY_hand','extraBegin'};
+fields = {'time','cursorX','cursorY','begin'};
+fields2 = {'extraTime','extraCursorX','extraCursorY','extraBegin'};
 
 allFields = [fields fields2];
 
@@ -203,7 +203,7 @@ for i = 1:Nsubj
     
     targetAbs = [d.targetX d.targetY];
     start = [0 0
-            targetAbs(1:9,1) targetAbs(1:9,2)];
+            targetAbs(1:end-1,1) targetAbs(1:end-1,2)];
     targetRel = targetAbs-start;
     
     for j = 1:Ntrials

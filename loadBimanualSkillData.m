@@ -13,7 +13,7 @@
 clear all
 
 % set variables for analysis
-path = 'Data/online/'; % path to the data
+path = 'Data/online/pilot_learning/'; % path to the data
 
 d = loadSubjData(path);
 data = processData(d);
