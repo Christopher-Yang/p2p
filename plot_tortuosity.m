@@ -35,13 +35,16 @@ for i = 1:Ngroups
         last_movtime = movtime{i}(habitBlocks(i,:),j);
         last_RT = RT{i}(habitBlocks(i,:),j);
         
-        pLength_incorrect{i} = [pLength_incorrect{i}; last_tort(incorrectIdx)];
-        movtime_incorrect{i} = [movtime_incorrect{i}; last_movtime(incorrectIdx)];
-        RT_incorrect{i} = [RT_incorrect{i}; last_RT(incorrectIdx)];
+%         pLength_incorrect{i} = [pLength_incorrect{i}; last_tort(incorrectIdx)];
+%         movtime_incorrect{i} = [movtime_incorrect{i}; last_movtime(incorrectIdx)];
+%         RT_incorrect{i} = [RT_incorrect{i}; last_RT(incorrectIdx)];
+%         
+%         pLength_correct{i} = [pLength_correct{i}; last_tort(correctIdx)];
+%         movtime_correct{i} = [movtime_correct{i}; last_movtime(correctIdx)];
+%         RT_correct{i} = [RT_correct{i}; last_RT(correctIdx)];
         
-        pLength_correct{i} = [pLength_correct{i}; last_tort(correctIdx)];
-        movtime_correct{i} = [movtime_correct{i}; last_movtime(correctIdx)];
-        RT_correct{i} = [RT_correct{i}; last_RT(correctIdx)];
+        RT_incorrect{i}(j) = mean(last_RT(incorrectIdx));
+        RT_correct{i}(j) = mean(last_RT(correctIdx));
     end
     
     Ntrials = size(RT{i},1);
@@ -175,32 +178,47 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/RT','-dpdf','-painters')
 
 %%
-figure(4); clf
-for i = 1:3
-    subplot(3,3,(i-1)*3+1); hold on
-    histogram(pLength_correct{i},0:0.25:8,'Normalization','pdf')
-    histogram(pLength_incorrect{i},0:0.25:8,'Normalization','pdf')
-    ylim([0 1.6])
-    if i == 3
-        xlabel('pLength')
-    end
+% figure(4); clf
+% for i = 1:3
+%     subplot(3,3,(i-1)*3+1); hold on
+%     histogram(pLength_correct{i},0:0.25:8,'Normalization','pdf')
+%     histogram(pLength_incorrect{i},0:0.25:8,'Normalization','pdf')
+%     ylim([0 1.6])
+%     if i == 3
+%         xlabel('pLength')
+%     end
+%     
+%     subplot(3,3,(i-1)*3+2); hold on
+%     histogram(movtime_correct{i},0:0.25:10,'Normalization','pdf')
+%     histogram(movtime_incorrect{i},0:0.25:10,'Normalization','pdf')
+%     ylim([0 1])
+%     if i == 3
+%         xlabel('Movement time (s)')
+%     end
+%     
+%     subplot(3,3,(i-1)*3+3); hold on
+%     histogram(RT_correct{i},0:50:2000,'Normalization','pdf')
+%     histogram(RT_incorrect{i},0:50:2000,'Normalization','pdf')
+%     ylim([0 0.005])
+%     if i == 3
+%         xlabel('Reaction time (ms)')
+%     end
+% end
+
+figure(4); clf; hold on
+for i = 1:Ngroup
+    n = length(RT_correct{i});
+    plot(i + 0.5*(rand(1,n) - 0.5), RT_incorrect{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+    plot(i, mean(RT_incorrect{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
     
-    subplot(3,3,(i-1)*3+2); hold on
-    histogram(movtime_correct{i},0:0.25:10,'Normalization','pdf')
-    histogram(movtime_incorrect{i},0:0.25:10,'Normalization','pdf')
-    ylim([0 1])
-    if i == 3
-        xlabel('Movement time (s)')
-    end
-    
-    subplot(3,3,(i-1)*3+3); hold on
-    histogram(RT_correct{i},0:50:2000,'Normalization','pdf')
-    histogram(RT_incorrect{i},0:50:2000,'Normalization','pdf')
-    ylim([0 0.005])
-    if i == 3
-        xlabel('Reaction time (ms)')
-    end
-end
+    plot(i+4 + 0.5*(rand(1,n) - 0.5),RT_correct{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(i+4, mean(RT_correct{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+end    
+xticks([2 6])
+xticklabels({'Away','Toward'})
+ylim([300 1100])
+ylabel('Reaction time (ms)')
+legend({'2-day','5-day','10-day'},'Location','northwest')
 
 %% bin reaches by the target's location
 for i = 1:Ngroup

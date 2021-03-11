@@ -162,7 +162,7 @@ for j = 1:2
 %         plot(repmat([0 6 12 18],[n 1]) + (rand(n,4) - 0.5) + 1.5*i, habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
 %         plot([0 6 12 18] + 1.5*i, mean(habit.(ax{j}).(groups{i}),1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1)
         plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
-        plot(xAxis(i,:), mean(habit.(ax{j}).(groups{i}),1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1)
+        plot(xAxis(i,:), mean(habit.(ax{j}).(groups{i}),1), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
         if i == 1
             xticks([1 3 5 8 13 15.5])
             xticklabels({'Baseline',1,2,5,10,'Flip'})
@@ -239,6 +239,7 @@ ylabel('Propotion of incorrect reaches in flipped block')
 title('left: 2-day; center: 5-day; right: 10-day')
 
 %% plot initial velocity sorted by correct/incorrect reaches
+rng(3);
 for i = 1:Ngroup
     for k = 1:Nsubj(i)
         baseline = trials{gblocks(i,1)};
@@ -260,30 +261,38 @@ for i = 1:Ngroup
     end
 end
 
-col = lines;
-col = col(1:7,:);
+col = [180 180 0
+       0 191 255
+       255 99 71]./255;
 
 figure(6); clf
 subplot(1,2,1); hold on
 for i = 1:Ngroup
+    n = size(initVel.(groups{i}),2);
     for j = 1:4
-        errorbar((j-1)*5+i,nanmean(initVel.(groups{i})(j,:)),nanstd(initVel.(groups{i})(j,:))/sqrt(Nsubj(i)),'.','LineWidth',2,'MarkerSize',20,'Color',col(i,:))
+        plot((j-1)*5 + i + 0.5*(rand(1,n) - 0.5), initVel.(groups{i})(j,:),'.','MarkerSize',20,'Color',col(i,:))
+        plot((j-1)*5+i, mean(initVel.(groups{i})(j,:)),'ko','LineWidth',1,'MarkerSize',10,'MarkerFaceColor',col(i,:))
     end
 end
 xticks(2:5:17)
 xticklabels({'Baseline','Early','Late','Flip'})
 ylabel('Velocity (m/s)')
-ylim([0 0.35])
+ylim([0 0.45])
 
 subplot(1,2,2); hold on
 for i = 1:Ngroup
-    errorbar(i,nanmean(incorrectVel.(groups{i})(4,:)),nanstd(incorrectVel.(groups{i})(4,:))/sqrt(Nsubj(i)),'.','LineWidth',2,'MarkerSize',20,'Color',col(i,:))
-    errorbar(i+4,nanmean(correctVel.(groups{i})(4,:)),nanstd(correctVel.(groups{i})(4,:))/sqrt(Nsubj(i)),'.','LineWidth',2,'MarkerSize',20,'Color',col(i,:),'HandleVisibility','off')
-end
+    n = size(initVel.(groups{i}),2);
+    plot(i + 0.5*(rand(1,n) - 0.5), incorrectVel.(groups{i})(4,:), '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+    plot(i, mean(incorrectVel.(groups{i})(4,:)), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+    
+    plot(i+4 + 0.5*(rand(1,n) - 0.5),correctVel.(groups{i})(4,:), '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(i+4, mean(correctVel.(groups{i})(4,:)), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+end    
 title('Data from just the flip block')
 xticks([2 6])
 xticklabels({'Incorrect','Correct'})
 ylim([0 0.35])
+ylabel('Velocity (m/s)')
 legend({'2-day','5-day','10-day'})
 
 %% plot the lag between left and right hand movement (doesn't work as is)
