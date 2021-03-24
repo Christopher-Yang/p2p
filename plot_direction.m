@@ -39,157 +39,6 @@ for i = 1:Ngroup
     bins{i} = d.(groups{i}){1}.targBin;
 end
 
-%% fit mixture model for each group
-clear mu_opt kappa_opt weight_opt sd history
-vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
-tolerance = 0.01; % tolerance for stopping EM loop
-
-% set values for initial parameters for EM loop
-muInit = 0;
-kappaInit = 1;
-weightInit = 0.99;
-
-% run EM for each group and block
-for k = 1:Ngroup % loop over groups
-    for j = 1:Nblock % loop over blocks
-        
-        % select trials to analyze and store in samples
-        trial = trials{gblocks(k,j)};
-        samples = dirError{k}(trial,:)*pi/180; % convert errors into radians
-        samples = reshape(samples, [numel(samples) 1]); % convert matrix to vector
-        samples = samples(~isnan(samples));
-        
-        % initialize mu and kappa for the VM distribution and the relative
-        % weight between the VM and uniform distributions
-        mu = muInit; % initial mu
-        kappa = kappaInit; % initial kappa
-        weight = weightInit; % initial weight
-        idx = 1; % index for tracking iteration number
-        proceed = true; % flag for continuing EM
-        
-        % EM loop
-        while proceed
-            
-            % expectation step
-            Pr_vm = weight * vmPDF(samples, mu, kappa) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
-            
-            % maximization step
-            log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm); % likelihood function
-            paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
-            [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
-            
-            % assign optimized values of parameters
-            mu = params_opt(1);
-            kappa = params_opt(2);
-            weight = params_opt(3);
-            
-            % keep track of log-likelihood for EM loop termination
-            history{k}{j}(idx) = fval;
-            
-            % check whether change in log-likelihood is below tolerance
-            if idx > 1 && abs(history{k}{j}(idx) - history{k}{j}(idx-1)) < tolerance
-                proceed = false;
-            end
-            idx = idx + 1; % increment iteration number
-
-%             % analytical approach to solve MLE
-%             xBar = mean(exp(1j*vmSamples));
-%             R = norm(xBar);
-%             mu = angle(xBar);
-%             kappa = R * (2 - R^2) ./ (1 - R^2);
-% 
-%             if idx > 50
-%                 proceed = false;
-%             end
-%             idx = idx + 1;
-        end
-        
-        % store fitted parameters for each dataset
-        mu_opt(j,k) = mu;
-        kappa_opt(j,k) = kappa;
-        weight_opt(j,k) = weight;
-        
-        % calculate circular standard deviation
-        R = (besseli(1,kappa)/besseli(0,kappa));
-        sd(j,k) = sqrt(-2 * log(R)); % standard deviation
-    end
-end
-
-% points to assess the PDF
-delt = pi/64;
-x = -pi:delt:pi-delt;
-
-% plot the PDFs of mixture model and just the VM distribution
-figure(1); clf
-for j = 1:Nblock
-    
-    % mixture model
-    subplot(2,3,j); hold on 
-    for k = 1:Ngroup
-        pdf = vmPDF(x, mu_opt(j,k), kappa_opt(j,k));
-        mixPDF = weight_opt(j,k) * pdf + (1-weight_opt(j,k)) * (1 / (2*pi));
-        plot(x*180/pi, mixPDF, 'LineWidth', 2)
-    end
-    title(blocks{j})
-    if j == 1
-        ylabel({'Probability density (mixture)'})
-    elseif j == 2
-        xlabel({'Reach direction error (degrees)'})
-    end
-    axis([-180 180 0 3.5])
-    
-    % VM distribution
-    subplot(2,3,j+3); hold on
-    for k = 1:Ngroup
-        pdf = vmPDF(x, mu_opt(j,k), kappa_opt(j,k));
-        plot(x*180/pi, pdf, 'LineWidth', 2)
-    end
-    if j == 1
-        ylabel({'Probability density (von Mises)'})
-    elseif j == 2
-        xlabel({'Reach direction error (degrees)'})
-    end
-    axis([-180 180 0 3.5])
-end
-
-% plot the mixture model on top of data histograms
-figure(2); clf
-for j = 1:Nblock
-    for k = 1:Ngroup
-        subplot(3, 3, (j-1)*3 + k); hold on
-        
-        % plot histograms
-        trial = trials{gblocks(k,j)};
-        histogram(dirError{k}(trial,:),x*180/pi,'Normalization','probability');
-        
-        % plot pdf
-        pdf = vmPDF(x, mu_opt(j,k), kappa_opt(j,k));
-        mixPDF = weight_opt(j,k) * pdf + (1-weight_opt(j,k)) * (1 / (2*pi));
-        plot(x*180/pi, mixPDF./sum(mixPDF), 'LineWidth', 2)
-        
-        if j == 1
-            title(graph_names{k})
-        elseif j == 2 && k == 1
-            ylabel('Probability')
-        elseif j == 3 && k == 2
-            xlabel('Reach Direction Error (degrees)')
-        end
-        axis([-180 180 0 0.2])
-    end
-end
-
-% plot mean and standard deviation of the fitted standard deviation from
-% the von Mises distribution
-figure(3); clf; hold on
-b = bar(sd*180/pi);
-for i = 1:3
-    b(i).FaceColor = col(i,:);
-end
-xticks(1:3)
-xticklabels(blocks)
-ylabel('St dev of von Mises distribution (degrees)')
-legend(graph_names)
-
 %% fit mixture model for each participant
 clear history
 vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
@@ -275,7 +124,7 @@ for k = 1:Ngroup
         end
     end
 end
-%%
+
 rng(2);
 % points to assess the PDF
 delt = pi/64;
@@ -287,8 +136,38 @@ sd_sd = nanstd(sd,[],3);
 
 sd2 = permute(sd,[1 3 2]);
 
-% plot the mean and standard deviation of the standard deviations
-% figure(4); clf; hold on
+%% plot mixture model fit on top of data histograms
+subj = 2; % choose which subject to plot fits for
+
+figure(1); clf
+for j = 1:Nblock
+    for k = 1:Ngroup
+        subplot(3, 3, (j-1)*3 + k); hold on
+        Nsubj = size(dirError{k},2);
+        
+        % plot histograms
+        if subj <= Nsubj
+            trial = trials{gblocks(k,j)};
+            histogram(dirError{k}(trial,subj),x*180/pi,'Normalization','probability');
+        end
+        
+        % plot pdf
+        pdf = vmPDF(x, mu_opt(j,k,subj), kappa_opt(j,k,subj)); % PDF of von Mises distribution
+        mixPDF = weight_opt(j,k,subj) * pdf + (1-weight_opt(j,k,subj)) * (1 / (2*pi)); % weight von Mises with uniform distribution
+        plot(x*180/pi, mixPDF./sum(mixPDF), 'LineWidth', 2)
+        if j == 1
+            title(graph_names{k})
+        elseif j == 2 && k == 1
+            ylabel('Probability')
+        elseif j == 3 && k == 2
+            xlabel('Reach Direction Error (degrees)')
+        end
+        axis([-180 180 0 0.3])
+    end
+end
+
+%% plot standard deviation of von Mises distribution (x-axis unscaled by practice time)
+% figure(2); clf; hold on
 % for i = 1:3
 %     plot(repmat([0 5 10]', [1 14]) + (rand(3,14)-0.5) + 1.5*i, sd2(:,:,i)*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
 %     plot([0 5 10] + 1.5*i, sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
@@ -305,16 +184,14 @@ xAxis = [0.5 1 1.5
          2.5 3 3.5
          5 11 21];
 
-xAxis1 = [0.5 1 1.5];
-xAxis2 = [2.5 3 3.5];
-xAxis3 = [5 11 21];
-figure(4); clf; hold on
-for i = 1:3
-    for j = 1:3
+% same plot as above but x-axis scaled by practice time
+figure(2); clf; hold on
+for i = 1:Ngroup
+    for j = 1:Nblock
         plot(xAxis(j,i) + 0.5*(rand(1,14)-0.5), squeeze(sd2(j,:,i))*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
     end
 end
-for i = 1:3
+for i = 1:Ngroup
     plot(xAxis(:,i), sd_mu(:,i)*180/pi, 'o', 'MarkerFaceColor', col2(i,:), 'MarkerEdgeColor', 'k', 'LineWidth', 1, 'MarkerSize', 10)
 end
 xticks([1 3 5 11 21])
@@ -326,45 +203,131 @@ yticks(0:20:100)
 legend(graph_names)
 set(gca,'Tickdir','out')
 
-print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/stdev','-dpdf','-painters')
+% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/stdev','-dpdf','-painters')
 
-%%
-sd2 = permute(sd,[1 3 2]);
-
-figure(15); clf; hold on
+% plot same data as above but grouped by group, not time during learning
+figure(3); clf; hold on
 for i = 1:3
-    plot((1:3) + (i-1)*4, sd2(:,:,i), 'Color', [col(i,:) 0.6])
-    plot((1:3) + (i-1)*4, nanmean(sd2(:,:,i),2), '.', 'Color', col(i,:), 'MarkerSize', 20)
+    plot((1:3) + (i-1)*4, sd2(:,:,i)*180/pi, 'Color', [col2(i,:) 0.6])
+    plot((1:3) + (i-1)*4, sd_mu(:,i)*180/pi, '.', 'Color', col2(i,:), 'MarkerSize', 20)
 end
+ylabel('St dev of von Mises distribution')
+xticks([1:3 5:7 9:11])
+xticklabels([blocks blocks blocks])
 
-% plot PDF on top of data histograms
-subj = 2;
-figure(5); clf
-for j = 1:Nblock
-    for k = 1:Ngroup
-        subplot(3, 3, (j-1)*3 + k); hold on
-        Nsubj = size(dirError{k},2);
-        
-        % plot histograms
-        if subj <= Nsubj
-            trial = trials{gblocks(k,j)};
-            histogram(dirError{k}(trial,subj),x*180/pi,'Normalization','probability');
+%% plot kernel-smoothed PDF
+figure(4); clf
+for i = 1:Ngroup
+    for j = 1:3
+        trial = trials{gblocks(i,j)};
+        subplot(1,3,j); hold on
+        [f,xi] = ksdensity(reshape(dirError{i}(trial,:),[numel(dirError{i}(trial,:)) 1]));
+        plot(xi,f,'LineWidth',2,'Color',col2(i,:))
+        if i == 3
+            title(blocks{j})
+            axis([-180 180 0 .06])
+            xticks(-180:90:180)
+            box off
+            set(gca,'Tickdir','out')
+            if j == 1
+                ylabel('Kernel-smoothed probability density')
+                yticks(0:0.02:0.06)
+            elseif j == 2
+                xlabel('Reach direction error (degrees)')
+                yticks([])
+            elseif j == 3
+                yticks([])
+            end
         end
-        
-        % plot pdf
-        pdf = vmPDF(x, mu_opt(j,k,subj), kappa_opt(j,k,subj));
-        mixPDF = weight_opt(j,k,subj) * pdf + (1-weight_opt(j,k,subj)) * (1 / (2*pi));
-        plot(x*180/pi, mixPDF./sum(mixPDF), 'LineWidth', 2)
-        if j == 1
-            title(graph_names{k})
-        elseif j == 2 && k == 1
-            ylabel('Probability')
-        elseif j == 3 && k == 2
-            xlabel('Reach Direction Error (degrees)')
-        end
-        axis([-180 180 0 0.3])
     end
 end
+legend(graph_names)
+
+% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/ksdensity','-dpdf','-painters')
+
+%% correlate proportion of away trials with standard deviation of von Mises distribution
+
+% set variables for analysis
+gblocks2 = [6 15 30]; % index of flip blocks for each group
+habit = NaN(max(allSubj), Ngroup);
+idx = [5 45]; % for plotting best-fit lines
+
+% store proportion of away trials in "habit"
+for i = 1:Ngroup
+    Nsubj = length(d.(groups{i}));
+    trialIdx = trials{gblocks2(i)};
+    
+    for j = 1:Nsubj
+        a = d.(groups{i}){j}.incorrectReach_x(trialIdx);
+        num = nansum(a);
+        den = 100-sum(isnan(a));
+        habit(j,i) = 100*num/den;
+    end
+end
+
+figure(5); clf; hold on
+for i = 1:Ngroup % plot raw data
+    plot(sd2(3,:,i)*180/pi, habit(:,i), '.', 'Color', col2(i,:), 'MarkerSize', 30)
+end
+
+% plot best-fit lines from least-squares regression
+p = polyfit(sd2(3,1:13,1)'*180/pi, habit(1:13,1), 1);
+plot(idx, p(1)*idx + p(2), 'Color', col2(1,:))
+p = polyfit(sd2(3,:,2)'*180/pi, habit(:,2), 1);
+plot(idx, p(1)*idx + p(2), 'Color', col2(2,:))
+p = polyfit(sd2(3,1:5,3)'*180/pi, habit(1:5,3), 1);
+plot(idx, p(1)*idx + p(2), 'Color', col2(3,:))
+
+xlabel('St dev of von Mises')
+ylabel('Proportion of away trials (%)')
+legend(graph_names, 'Location', 'southeast')
+ylim([10 60])
+
+%% plot reach direction histograms binned by target direction
+edges = -180:10:180;
+for j = 1:Ngroup
+    figure(5+j-1); clf
+    for i = 1:4
+        bin = bins{j}==i;
+        binTrials = find(bins{j} == i);
+        early = binTrials(logical((binTrials>=trials{2}(1)) + (binTrials<=trials{2}(end))-1));
+        late = binTrials(logical((binTrials>=trials{gblocks(j,3)}(1)) + (binTrials<=trials{gblocks(j,3)}(end))-1));
+        post = binTrials(logical((binTrials>=trials{gblocks(j,3)+1}(1)) + (binTrials<=trials{gblocks(j,3)+1}(end))-1));
+        
+        subplot(3,4,i)
+        histogram(dirError{j}(early,:),edges,'Normalization','pdf')
+        xticks(-180:90:180)
+        ylim([0 .04])
+        if i == 1
+            title('Closest')
+            ylabel('Early')
+        elseif i == 2
+            title('Close')
+        elseif i == 3
+            title('Far')
+        else
+            title('Farthest')
+        end
+        
+        subplot(3,4,i+4)
+        histogram(dirError{j}(late,:),edges,'Normalization','pdf')
+        xticks(-180:90:180)
+        ylim([0 .04])
+        if i == 1
+            ylabel('Late')
+        end
+        
+        subplot(3,4,i+8)
+        histogram(dirError{j}(post,:),edges,'Normalization','pdf')
+        xticks(-180:90:180)
+        ylim([0 .04])
+        xlabel('Error (degrees)')
+        if i == 1
+            ylabel('Post')
+        end
+    end
+end
+
 %% bootstrap confidence intervals for direction error
 rng(1);
 
@@ -418,39 +381,6 @@ xlim([0.5 11.5])
 ylabel('Standard deviation of directional error (degrees)')
 legend(graph_names)
 
-%% plot kernel density estimates
-col2 = [0 0 0
-        0 191 255
-        255 99 71]./255;
-
-figure(8); clf
-for i = 1:Ngroup
-    for j = 1:3
-        trial = trials{gblocks(i,j)};
-        subplot(1,3,j); hold on
-        [f,xi] = ksdensity(reshape(dirError{i}(trial,:),[numel(dirError{i}(trial,:)) 1]));
-        plot(xi,f,'LineWidth',2,'Color',col2(i,:))
-        if i == 3
-            title(blocks{j})
-            axis([-180 180 0 .06])
-            xticks(-180:90:180)
-            box off
-            set(gca,'Tickdir','out')
-            if j == 1
-                ylabel('Kernel-smoothed probability density')
-                yticks(0:0.02:0.06)
-            elseif j == 2
-                xlabel('Reach direction error (degrees)')
-                yticks([])
-            elseif j == 3
-                yticks([])
-            end
-        end
-    end
-end
-legend(graph_names)
-
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/ksdensity','-dpdf','-painters')
 %%
 Ntrials2 = 100;
 trialsAll = {1:100,101:200,201:300};
@@ -504,51 +434,6 @@ xticklabels(graph_names)
 ylabel('Percent towards mirrored target')
 axis([0.5 11.5 0 70])
 box off
-
-%%
-edges = -180:10:180;
-for j = 1:Ngroup
-    figure(6+j-1); clf
-    for i = 1:4
-        bin = bins{j}==i;
-        binTrials = find(bins{j} == i);
-        early = binTrials(logical((binTrials>=trials{2}(1)) + (binTrials<=trials{2}(end))-1));
-        late = binTrials(logical((binTrials>=trials{gblocks(j,3)}(1)) + (binTrials<=trials{gblocks(j,3)}(end))-1));
-        post = binTrials(logical((binTrials>=trials{gblocks(j,3)+1}(1)) + (binTrials<=trials{gblocks(j,3)+1}(end))-1));
-        
-        subplot(3,4,i)
-        histogram(dirError{j}(early,:),edges,'Normalization','pdf')
-        xticks(-180:90:180)
-        ylim([0 .04])
-        if i == 1
-            title('Closest')
-            ylabel('Early')
-        elseif i == 2
-            title('Close')
-        elseif i == 3
-            title('Far')
-        else
-            title('Farthest')
-        end
-        
-        subplot(3,4,i+4)
-        histogram(dirError{j}(late,:),edges,'Normalization','pdf')
-        xticks(-180:90:180)
-        ylim([0 .04])
-        if i == 1
-            ylabel('Late')
-        end
-        
-        subplot(3,4,i+8)
-        histogram(dirError{j}(post,:),edges,'Normalization','pdf')
-        xticks(-180:90:180)
-        ylim([0 .04])
-        xlabel('Error (degrees)')
-        if i == 1
-            ylabel('Post')
-        end
-    end
-end
 
 % function for computing log-likelihod
 function neg_log_likelihood = calc_likelihood(params,samples,Pr_vm)

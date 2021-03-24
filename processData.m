@@ -1,6 +1,8 @@
 function data = processData(data)
 % analyze cursor data for path length, RT, etc smooth trajectories
 
+delay = 20; % time after reach initiation to compute initial reach direction
+
 for i=1:data.Ntrials
     % smooth trajectories
     data.Cr{i} = sgolayfilt(data.Cr{i},3,7);
@@ -36,8 +38,8 @@ for i=1:data.Ntrials
     data.init(i) = min(find(data.state{i}==4)); % time of movement initiation
     data.end(i) = max(find(data.state{i}==4)); % time of movement end
     
-    data.initVel(i) = data.tanVel{i}(data.init(i)+20);
-    data.initVel_filt(i) = velFilt(data.init(i)+20);
+    data.initVel(i) = data.tanVel{i}(data.init(i)+delay);
+    data.initVel_filt(i) = velFilt(data.init(i)+delay);
     
     %% identify initial reach direction in x- and y-axes 
     if i == 1
@@ -54,12 +56,12 @@ for i=1:data.Ntrials
         data.incorrectReach_y(i) = NaN;
     else
         data.init_y(i) = min(find(threshold_y==1));
-        if data.init_y(i)+20 > size(vel_C,1)
+        if data.init_y(i)+delay > size(vel_C,1)
             data.init_y(i) = NaN;
             data.initVel_y(i) = NaN;
             data.incorrectReach_y(i) = NaN;
         else
-            data.initVel_y(i) = vel_C(data.init_y(i)+20,2);
+            data.initVel_y(i) = vel_C(data.init_y(i)+delay,2);
             
             % incorrectReach_y = 1 if there is a habit, incorrectReach_y = 0 if there's no
             % habit
@@ -79,12 +81,12 @@ for i=1:data.Ntrials
         data.incorrectReach_x(i) = NaN;
     else
         data.init_x(i) = min(find(threshold_x==1));
-        if data.init_x(i)+20 > size(vel_C,1)
+        if data.init_x(i)+delay > size(vel_C,1)
             data.init_x(i) = NaN;
             data.initVel_x(i) = NaN;
             data.incorrectReach_x(i) = NaN;
         else
-            data.initVel_x(i) = vel_C(data.init_x(i)+20,1);
+            data.initVel_x(i) = vel_C(data.init_x(i)+delay,1);
             
             % incorrectReach_x = 1 if there is a habit, incorrectReach_x = 0 if there's no
             % habit
@@ -98,9 +100,9 @@ for i=1:data.Ntrials
         end
     end
     
-    % should technically use data.init_x(i)+20 and similar for init_y, but
-    % on some trials the initiation time is close to the end of the trial,
-    % meaning the reach ends before adding on 150 ms 
+    % should technically use data.init_x(i)+delay and similar for init_y, 
+    % but on some trials the initiation time is close to the end of the 
+    % trial, meaning the reach ends before adding on 150 ms 
     if ~isnan(data.init_x(i)) && ~isnan(data.init_y(i))
         data.lag(i) = data.time{i}(data.init_x(i))-data.time{i}(data.init_y(i));
     else
@@ -121,7 +123,7 @@ for i=1:data.Ntrials
     data.pathlength_null(i) = sum(dL);
     
     % compute initial reach direction
-    iDir = data.init(i)+20; % 100 ms (13 time steps) after initiation
+    iDir = data.init(i)+delay; % 100 ms (13 time steps) after initiation
     initDir = atan2(vel_Cr(iDir,2),vel_Cr(iDir,1));
     initDir = initDir-pi/2;
     while initDir >= pi

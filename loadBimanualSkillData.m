@@ -44,3 +44,8 @@ end
 
 % save P2P d
 disp('All Done')
+
+%% plot data
+
+plot_traj(d);
+plot_kinematics(d);
