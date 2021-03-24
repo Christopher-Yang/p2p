@@ -259,7 +259,7 @@ xticklabels([1 30])
 % yticks(400:400:1800)
 axis([1 6 0 0.4])
 xlabel('Trial number')
-ylabel('Reaction time (ms)')
+ylabel('Initial velocity (m/s)')
 title('Baseline')
 set(gca,'TickDir','out')
 
