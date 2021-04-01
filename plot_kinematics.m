@@ -26,6 +26,8 @@ for i = 1:Ngroups
         movtime{i}(:,j) = a.movtime./1000;
         RT{i}(:,j) = a.RT;
         vel{i}(:,j) = a.initVel_filt;
+        velX{i}(:,j) = abs(a.initVel_x);
+        velY{i}(:,j) = abs(a.initVel_y);
         
         % need to use == 1/0 because some values are NaN
         awayIdx = a.incorrectReach_x(end-99:end) == 1;
@@ -33,11 +35,18 @@ for i = 1:Ngroups
 
         last_RT = RT{i}(habitBlocks(i,:),j);
         last_vel = vel{i}(habitBlocks(i,:),j);
+        last_velX = velX{i}(habitBlocks(i,:),j);
+        last_velY = velY{i}(habitBlocks(i,:),j);
         
         RT_away{i}(j) = mean(last_RT(awayIdx));
         RT_toward{i}(j) = mean(last_RT(towardIdx));
         vel_away{i}(j) = nanmean(last_vel(awayIdx));
         vel_toward{i}(j) = nanmean(last_vel(towardIdx));
+        velX_away{i}(j) = nanmean(last_velX(awayIdx));
+        velX_toward{i}(j) = nanmean(last_velX(towardIdx));
+        velY_away{i}(j) = nanmean(last_velY(awayIdx));
+        velY_toward{i}(j) = nanmean(last_velY(towardIdx));
+        
     end
     
     Ntrials = size(RT{i},1);
@@ -330,6 +339,7 @@ end
 axis([0.5 3.5 1 4.5])
 xticks([])
 yticks(1:4)
+title('Data from flip block')
 ylabel('Movement time (s)')
 set(gca, 'TickDir', 'out')
 
@@ -344,60 +354,90 @@ yticks(400:200:1000)
 ylabel('Reaction time (ms)')
 set(gca, 'TickDir', 'out')
 
-%%
+%% plot kinematics across blocks with subjects connected by lines
 
 for i = 1:3
     pLength3{i}(1,:) = mean(pLength{i}(1:30,:),1);
     pLength3{i}(2,:) = mean(pLength{i}(habitBlocks(i,:)-100,:),1);
+    pLength3{i}(3,:) = mean(pLength{i}(habitBlocks(i,:),:),1);
 
     movtime3{i}(1,:) = mean(movtime{i}(1:30,:),1);
     movtime3{i}(2,:) = mean(movtime{i}(habitBlocks(i,:)-100,:),1);
+    movtime3{i}(3,:) = mean(movtime{i}(habitBlocks(i,:),:),1);
 
     RT3{i}(1,:) = mean(RT{i}(1:30,:),1);
     RT3{i}(2,:) = mean(RT{i}(habitBlocks(i,:)-100,:),1);
+    RT3{i}(3,:) = mean(RT{i}(habitBlocks(i,:),:),1);
 
     vel3{i}(1,:) = nanmean(vel{i}(1:30,:),1);
     vel3{i}(2,:) = nanmean(vel{i}(habitBlocks(i,:)-100,:),1);
+    vel3{i}(3,:) = nanmean(vel{i}(habitBlocks(i,:),:),1);
 end
+
+subject = [repelem({'2-day'},13) repelem({'5-day'},14) repelem({'10-day'},5)]';
+meas(:,1) = [vel3{1}(2,:) vel3{2}(2,:) vel3{3}(2,:)];
+meas(:,2) = [vel3{1}(3,:) vel3{2}(3,:) vel3{3}(3,:)];
+
+t = table(subject, meas(:,1), meas(:,2), 'VariableNames', {'Subject','meas1','meas2'});
+Meas = table([1 2]', 'VariableNames', {'Block'});
+
+rm = fitrm(t, 'meas1-meas2~Subject', 'WithinDesign', Meas);
+
+
+% velocity = [reshape(vel3{1}, [numel(vel3{1}) 1]); reshape(vel3{2}, [numel(vel3{2}) 1]); ...
+%     reshape(vel3{3}, [numel(vel3{3}) 1])];
+% dlmwrite('C:/Users/Chris/Documents/R/habit/data/velocity.csv', velocity)
 
 figure(6); clf
 subplot(2,2,1); hold on
 for i = 1:3
-    plot(2*(i-1) + (1:2), pLength3{i}*100, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), pLength3{i}*100, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(3*(i-1) + (1:3), mean(pLength3{i},2)*100, 'ko', 'MarkerFaceColor', col(i,:), 'MarkerSize', 10, 'LineWidth', 1)
 end
-xticks(1:6)
-xticklabels({'Baseline', 'Late', 'Baseline', 'Late', 'Baseline', 'Late'})
+xticks(1:9)
+xlim([0.5 9.5])
+xticklabels({'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip'})
 ylabel('Path length (cm)')
+set(gca,'TickDir','out')
 legend({'2-day','5-day','10-day'})
 
 subplot(2,2,2); hold on
 for i = 1:3
-    plot(2*(i-1) + (1:2), movtime3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), movtime3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), mean(movtime3{i},2), 'ko', 'MarkerFaceColor', col(i,:), 'MarkerSize', 10, 'LineWidth', 1)
 end
-xticks(1:6)
-xticklabels({'Baseline', 'Late', 'Baseline', 'Late', 'Baseline', 'Late'})
+xticks(1:9)
+xlim([0.5 9.5])
+xticklabels({'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip'})
 ylabel('Movement time (s)')
+set(gca,'TickDir','out')
 
 subplot(2,2,3); hold on
 for i = 1:3
-    plot(2*(i-1) + (1:2), RT3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), RT3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), mean(RT3{i},2), 'ko', 'MarkerFaceColor', col(i,:), 'MarkerSize', 10, 'LineWidth', 1)
 end
-xticks(1:6)
-xticklabels({'Baseline', 'Late', 'Baseline', 'Late', 'Baseline', 'Late'})
+xticks(1:9)
+xlim([0.5 9.5])
+xticklabels({'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip'})
 ylabel('Reaction time (ms)')
+set(gca,'TickDir','out')
 
 subplot(2,2,4); hold on
 for i = 1:3
-    plot(2*(i-1) + (1:2), vel3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), vel3{i}, 'Color', col(i,:))
+    plot(3*(i-1) + (1:3), mean(vel3{i},2), 'ko', 'MarkerFaceColor', col(i,:), 'MarkerSize', 10, 'LineWidth', 1)
 end
-xticks(1:6)
-xticklabels({'Baseline', 'Late', 'Baseline', 'Late', 'Baseline', 'Late'})
+xticks(1:9)
+xlim([0.5 9.5])
+xticklabels({'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip', 'Baseline', 'Late', 'Flip'})
 ylabel('Initial reach velocity (m/s)')
+set(gca,'TickDir','out')
 
 %% plot reaction time and initial velocity of away vs toward trials
 
 figure(7); clf
-subplot(1,2,1); hold on
+subplot(1,4,1); hold on
 for i = 1:Ngroups
     n = length(RT_toward{i});
     
@@ -417,9 +457,9 @@ ylabel('Reaction time (ms)')
 set(gca, 'TickDir', 'out')
 legend({'2-day','5-day','10-day'},'Location','northwest')
 
-subplot(1,2,2); hold on
+subplot(1,4,2); hold on
 for i = 1:Ngroups
-    n = length(RT_toward{i});
+    n = length(vel_toward{i});
     
     % plot away trials
     plot(i + 0.5*(rand(1,n) - 0.5), vel_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
@@ -432,7 +472,45 @@ end
 xticks([2 6])
 xticklabels({'Away','Toward'})
 ylim([0.05 0.35])
-ylabel('Velocity (m/s)')
+ylabel('Tangential initial velocity (m/s)')
+set(gca, 'TickDir', 'out')
+
+subplot(1,4,3); hold on
+for i = 1:Ngroups
+    n = length(vel_toward{i});
+    
+    % plot away trials
+    plot(i + 0.5*(rand(1,n) - 0.5), velX_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+    plot(i, mean(velX_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+    
+    % plot toward trials
+    plot(i+4 + 0.5*(rand(1,n) - 0.5),velX_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(i+4, mean(velX_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+end
+xticks([2 6])
+xticklabels({'Away','Toward'})
+yticks(0:0.1:0.3)
+ylim([0 0.3])
+ylabel('Horizontal initial velocity (m/s)')
+set(gca, 'TickDir', 'out')
+
+subplot(1,4,4); hold on
+for i = 1:Ngroups
+    n = length(vel_toward{i});
+    
+    % plot away trials
+    plot(i + 0.5*(rand(1,n) - 0.5), velY_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+    plot(i, mean(velY_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+    
+    % plot toward trials
+    plot(i+4 + 0.5*(rand(1,n) - 0.5),velY_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(i+4, mean(velY_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+end
+xticks([2 6])
+xticklabels({'Away','Toward'})
+yticks(0:0.1:0.3)
+ylim([0 0.3])
+ylabel('Vertical initial velocity (m/s)')
 set(gca, 'TickDir', 'out')
 
 %% correlate reaction time and initial velocity to proportion of away trials
@@ -452,50 +530,89 @@ end
 
 % average reaction times within subjects
 for i = 1:3
-    RT3{i} = RT{i}(habitBlocks(i,:),:); 
+    pLength3{i} = pLength{i}(habitBlocks(i,:)-100,:);
+    pLength3{i} = mean(pLength3{i},1);
+    
+    movtime3{i} = movtime{i}(habitBlocks(i,:)-100,:);
+    movtime3{i} = mean(movtime3{i},1);
+    
+    RT3{i} = RT{i}(habitBlocks(i,:)-100,:); 
     RT3{i} = mean(RT3{i},1);
     
-    vel3{i} = vel{i}(habitBlocks(i,:),:); 
+    vel3{i} = vel{i}(habitBlocks(i,:)-100,:); 
     vel3{i} = nanmean(vel3{i},1);
 end
 
 % plot data
 figure(8); clf
-subplot(1,2,1); hold on
+subplot(1,4,1); hold on
 for i = 1:3
     plot(RT3{i}, habit(~isnan(habit(:,i)),i), '.', 'Color', col(i,:), 'MarkerSize', 20)
 end
 
 % plot best-fit lines from least-squares regression
-idx = [300 1100];
+idx = [200 700];
 for i = 1:3
     p = polyfit(RT3{i}', habit(~isnan(habit(:,i)),i), 1);
     plot(idx, p(1)*idx + p(2), 'Color', col(i,:))
 end
 
-xlim([300 1100])
-xticks(300:200:1100)
-yticks(10:10:60)
+% xlim([300 1100])
+ylim([10 60])
 xlabel('Reaction time (ms)')
 ylabel('Proportion of away trials (%)')
 set(gca, 'TickDir', 'out')
 
-subplot(1,2,2); hold on
+subplot(1,4,2); hold on
 for i = 1:3
     plot(vel3{i}, habit(~isnan(habit(:,i)),i), '.', 'Color', col(i,:), 'MarkerSize', 20)
 end
 
 % plot best-fit lines from least-squares regression
-idx = [0.05 0.35];
+idx = [0 0.6];
 for i = 1:3
     p = polyfit(vel3{i}', habit(~isnan(habit(:,i)),i), 1);
     plot(idx, p(1)*idx + p(2), 'Color', col(i,:))
 end
 
-xlim([0.05 0.35])
-xticks(0.05:0.1:0.35)
-yticks(10:10:60)
+% xlim([0.05 0.35])
+ylim([10 60])
 xlabel('Velocity (m/s)')
+ylabel('Proportion of away trials (%)')
+set(gca, 'TickDir', 'out')
+legend({'2-day','5-day','10-day'}, 'Location', 'northeast')
+
+subplot(1,4,3); hold on
+for i = 1:3
+    plot(pLength3{i}*100, habit(~isnan(habit(:,i)),i), '.', 'Color', col(i,:), 'MarkerSize', 20)
+end
+
+% plot best-fit lines from least-squares regression
+idx = [10 40];
+for i = 1:3
+    p = polyfit(pLength3{i}'*100, habit(~isnan(habit(:,i)),i), 1);
+    plot(idx, p(1)*idx + p(2), 'Color', col(i,:))
+end
+
+ylim([10 60])
+xlabel('Path length (cm)')
+ylabel('Proportion of away trials (%)')
+set(gca, 'TickDir', 'out')
+
+subplot(1,4,4); hold on
+for i = 1:3
+    plot(movtime3{i}, habit(~isnan(habit(:,i)),i), '.', 'Color', col(i,:), 'MarkerSize', 20)
+end
+
+% plot best-fit lines from least-squares regression
+idx = [0.5 2.5];
+for i = 1:3
+    p = polyfit(movtime3{i}', habit(~isnan(habit(:,i)),i), 1);
+    plot(idx, p(1)*idx + p(2), 'Color', col(i,:))
+end
+
+ylim([10 60])
+xlabel('Movement time (s)')
 ylabel('Proportion of away trials (%)')
 set(gca, 'TickDir', 'out')
 legend({'2-day','5-day','10-day'}, 'Location', 'northeast')

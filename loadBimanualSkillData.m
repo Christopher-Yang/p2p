@@ -42,10 +42,14 @@ for i = 1:length(names)
     end
 end
 
-% save P2P d
+% save('variables/d.mat','d') % can't save variables larger than 2 GB
 disp('All Done')
 
 %% plot data
 
 plot_traj(d);
 plot_kinematics(d);
+plot_habit(d);
+
+load('variables/vmFit')
+plot_direction(d,vmFit)

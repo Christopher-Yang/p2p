@@ -1,7 +1,6 @@
 %% align velocity to target presentation
 
 clear vel 
-blocks = {'Baseline','Early','Late'};
 groups = {'day2','day5','day10'};
 graph_names = {'2-day','5-day','10-day'};
 Nsubj = [13 14 5];
@@ -14,9 +13,9 @@ for i = 1:29
 end
 
 % blocks for baseline, early, and late for each group
-gblocks = [1 2 5
-          1 2 14
-          1 2 29];
+gblocks{1} = [1 2 3 5];
+gblocks{2} = [1 2 3 5 9 12 14];
+gblocks{3} = [1 2 3 5 9 12 15 18 21 24 27 29];
 
 for k = 1:Ngroup
     Nmax = [];
@@ -25,10 +24,10 @@ for k = 1:Ngroup
         Nmax(j) = max(cellfun('size',a.velFilt,1));
     end
     
-    vel{k} = NaN(max(Nmax),230,Nsubj(k));
+    vel{k} = NaN(max(Nmax),length(gblocks{k})*100 - 70,Nsubj(k));
     for j = 1:Nsubj(k)
         a = d.(groups{k}){j};
-        trialIdx = [trials{gblocks(k,:)}];
+        trialIdx = [trials{gblocks{k}}];
         for i = 1:length(trialIdx)
             v = a.velFilt{trialIdx(i)}(a.itargonset(trialIdx(i)):end);
             vel{k}(1:length(v),i,j) = v;
@@ -37,29 +36,45 @@ for k = 1:Ngroup
 end
 
 %% plot results
-delt = 1/130;
 
-col = [0 0 0
-       0 191 255
-       255 99 71]./255;
+delt = 1/130; % sampling period
 
 figure(1); clf
-for i = 1:Ngroup
-    xAxis = 0:delt:size(vel{i},1)*delt - delt;
+for i = 1:Ngroup % loop over groups
+    
+    xAxis = 0:delt:size(vel{i},1)*delt - delt; % times at which data were collected
+    Nblock = length(gblocks{i}); % number of blocks to plot for each group
+    
+    % set colors to plot lines
+    col1 = [255 0 0]./255;
+    col2 = [255 215 0]./255;
+    col = [linspace(col1(1),col2(1),Nblock-1)', linspace(col1(2),col2(2),Nblock-1)', linspace(col1(3),col2(3),Nblock-1)'];
     
     subplot(1,3,i); hold on
-    for j = 1:3
-        v = nanmean(vel{i}(:,trials{j},:),2);
-        s = shadedErrorBar(xAxis,nanmean(v,3),std(v,[],3)/sqrt(Nsubj(i))); % baseline
-        editErrorBar(s,col(j,:),1);
+    
+    % plot all data except baseline and last day of learning
+    for j = 2:Nblock-1
+        v = nanmean(vel{i}(:,trials{j},:),2)*100;
+        s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+        editErrorBar(s,col(j-1,:),2);
     end
-    axis([0 2 0 0.4])
+    
+    % plot baseline
+    v = nanmean(vel{i}(:,1:30,:),2)*100;
+    s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+    editErrorBar(s,[0 0 0],2);
+    
+    % plot last day of learning
+    v = nanmean(vel{i}(:,end-99:end,:),2)*100;
+    s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+    editErrorBar(s,col(end,:),2);
+    
+    axis([0 2 0 40])
+    yticks(0:10:40)
     title(graph_names{i})
     xlabel('Time from target onset (s)')
     if i == 1
-        ylabel('Velocity')
-    elseif i == 3
-        legend(blocks)
+        ylabel('Tangential velocity (cm/s)')
     end
 end
 

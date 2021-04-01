@@ -1,8 +1,9 @@
+function plot_direction(d, vmFit)
 
 % set variables for analysis
+rng(2);
 groups = fieldnames(d);
 graph_names = {'2-day','5-day','10-day'};
-names = {'day2','day5','day10'};
 blocks = {'Baseline','Early','Late'};
 Ngroup = length(groups);
 Nblock = length(blocks);
@@ -15,10 +16,13 @@ for i = 1:29
 end
 
 % blocks for baseline, early, and late for each group
-gblocks = [1 2 5
-          1 2 14
-          1 2 29];
-
+gblocks{1} = [1 2 5];
+gblocks{2} = [1 2 14];
+gblocks{3} = [1 2 29];
+% gblocks{1} = [1 2 5];
+% gblocks{2} = [1 2 6 9 12 14];
+% gblocks{3} = [1 2 6 9 12 15 18 21 24 27 29];
+      
 % set colors for generating plots
 col = lines;
 col = col(1:7,:);
@@ -40,92 +44,105 @@ for i = 1:Ngroup
 end
 
 %% fit mixture model for each participant
-clear history
 vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
-tolerance = 0.01; % tolerance for stopping EM loop
 
-% set values for initial parameters for EM loop
-muInit = 0;
-kappaInit = 1;
-weightInit = 0.99;
-
-% preallocate variables for parameters
-mu_opt = NaN(Nblock,Ngroup,max(allSubj));
-kappa_opt = NaN(Nblock,Ngroup,max(allSubj));
-weight_opt = NaN(Nblock,Ngroup,max(allSubj));
-sd = NaN(Nblock,Ngroup,max(allSubj));
-
-% main loop for EM
-for k = 1:Ngroup
-    Nsubj = length(d.(groups{k}));
-    for m = 1:Nsubj
-        for j = 1:Nblock
-            
-            % select trials to analyze and store in samples
-            trial = trials{gblocks(k,j)};
-            samples = dirError{k}(trial,m)*pi/180; % convert error to radians
-            samples = samples(~isnan(samples));
-            
-            % initialize mu and kappa for the VM distribution and the 
-            % relative weight between the VM and uniform distributions
-            mu = muInit;
-            kappa = kappaInit;
-            weight = weightInit;
-            idx = 1; % index for tracking number of EM iterations
-            proceed = true; % flag for stopping EM loop
-            
-            % EM loop
-            while proceed
+if nargin > 1
+    mu_opt = vmFit.mu_opt;
+    kappa_opt = vmFit.kappa_opt;
+    weight_opt = vmFit.weight_opt;
+    sd = vmFit.sd;
+else
+    tolerance = 0.01; % tolerance for stopping EM loop
+    
+    % set values for initial parameters for EM loop
+    muInit = 0;
+    kappaInit = 1;
+    weightInit = 0.99;
+    
+    % preallocate variables for parameters
+    mu_opt = NaN(Nblock,Ngroup,max(allSubj));
+    kappa_opt = NaN(Nblock,Ngroup,max(allSubj));
+    weight_opt = NaN(Nblock,Ngroup,max(allSubj));
+    sd = NaN(Nblock,Ngroup,max(allSubj));
+    
+    % main loop for EM
+    for k = 1:Ngroup
+        Nsubj = length(d.(groups{k}));
+        for m = 1:Nsubj
+            for j = 1:Nblock
                 
-                % expectation step
-                Pr_vm = weight * vmPDF(samples, mu, kappa) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
-                Pr_unif = (1-weight) * (1 / (2*pi)) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
+                % select trials to analyze and store in samples
+                trial = trials{gblocks{k}(j)};
+                samples = dirError{k}(trial,m)*pi/180; % convert error to radians
+                samples = samples(~isnan(samples));
                 
-                % maximization step
-                log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm);
-                paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
-                [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
+                % initialize mu and kappa for the VM distribution and the
+                % relative weight between the VM and uniform distributions
+                mu = muInit;
+                kappa = kappaInit;
+                weight = weightInit;
+                idx = 1; % index for tracking number of EM iterations
+                proceed = true; % flag for stopping EM loop
                 
-                % assign optimized values of parameters
-                mu = params_opt(1);
-                kappa = params_opt(2);
-                weight = params_opt(3);
-                
-                % keep track of log-likelihood to terminate EM loop
-                history{k}{m}{j}(idx) = fval;
-                
-                % terminate loop if change in log-likelihood is smaller 
-                % than tolerance,
-                if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
-                    proceed = false;
+                % EM loop
+                while proceed
+                    
+                    % expectation step
+                    Pr_vm = weight * vmPDF(samples, mu, kappa) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
+                    Pr_unif = (1-weight) * (1 / (2*pi)) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
+                    
+                    % maximization step
+                    log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm);
+                    paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
+                    [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
+                    
+                    % assign optimized values of parameters
+                    mu = params_opt(1);
+                    kappa = params_opt(2);
+                    weight = params_opt(3);
+                    
+                    % keep track of log-likelihood to terminate EM loop
+                    history{k}{m}{j}(idx) = fval;
+                    
+                    % terminate loop if change in log-likelihood is smaller
+                    % than tolerance,
+                    if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
+                        proceed = false;
+                    end
+                    idx = idx + 1; % increment loop iteration number
+                    
+%                     % analytical approach to solve MLE
+%                     xBar = mean(exp(1j*vmSamples));
+%                     R = norm(xBar);
+%                     mu = angle(xBar);
+%                     kappa = R * (2 - R^2) ./ (1 - R^2);
+%                     
+%                     if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
+%                         proceed = false;
+%                     end
+%                     idx = idx + 1;
                 end
-                idx = idx + 1; % increment loop iteration number
                 
-%                 % analytical approach to solve MLE
-%                 xBar = mean(exp(1j*vmSamples));
-%                 R = norm(xBar);
-%                 mu = angle(xBar);
-%                 kappa = R * (2 - R^2) ./ (1 - R^2);
-% 
-%                 if idx > 50
-%                     proceed = false;
-%                 end
-%                 idx = idx + 1;
+                % store fitted parameter values
+                mu_opt(j,k,m) = mu;
+                kappa_opt(j,k,m) = kappa;
+                weight_opt(j,k,m) = weight;
+                
+                % compute circular standard deviation
+                R = (besseli(1,kappa)/besseli(0,kappa));
+                sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
             end
-            
-            % store fitted parameter values
-            mu_opt(j,k,m) = mu;
-            kappa_opt(j,k,m) = kappa;
-            weight_opt(j,k,m) = weight;
-            
-            % compute circular standard deviation
-            R = (besseli(1,kappa)/besseli(0,kappa));
-            sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
         end
     end
+    
+    vmFit.mu_opt = mu_opt;
+    vmFit.kappa_opt = kappa_opt;
+    vmFit.weight_opt = weight_opt;
+    vmFit.sd = sd;
+    
+    save('variables/vmFit.mat','vmFit')
 end
 
-rng(2);
 % points to assess the PDF
 delt = pi/64;
 x = -pi:delt:pi-delt;
@@ -147,7 +164,7 @@ for j = 1:Nblock
         
         % plot histograms
         if subj <= Nsubj
-            trial = trials{gblocks(k,j)};
+            trial = trials{gblocks{k}(j)};
             histogram(dirError{k}(trial,subj),x*180/pi,'Normalization','probability');
         end
         
@@ -219,7 +236,7 @@ xticklabels([blocks blocks blocks])
 figure(4); clf
 for i = 1:Ngroup
     for j = 1:3
-        trial = trials{gblocks(i,j)};
+        trial = trials{gblocks{i}(j)};
         subplot(1,3,j); hold on
         [f,xi] = ksdensity(reshape(dirError{i}(trial,:),[numel(dirError{i}(trial,:)) 1]));
         plot(xi,f,'LineWidth',2,'Color',col2(i,:))
@@ -286,13 +303,13 @@ ylim([10 60])
 %% plot reach direction histograms binned by target direction
 edges = -180:10:180;
 for j = 1:Ngroup
-    figure(5+j-1); clf
+    figure(6+j-1); clf
     for i = 1:4
         bin = bins{j}==i;
         binTrials = find(bins{j} == i);
         early = binTrials(logical((binTrials>=trials{2}(1)) + (binTrials<=trials{2}(end))-1));
-        late = binTrials(logical((binTrials>=trials{gblocks(j,3)}(1)) + (binTrials<=trials{gblocks(j,3)}(end))-1));
-        post = binTrials(logical((binTrials>=trials{gblocks(j,3)+1}(1)) + (binTrials<=trials{gblocks(j,3)+1}(end))-1));
+        late = binTrials(logical((binTrials>=trials{gblocks{j}(end)}(1)) + (binTrials<=trials{gblocks{j}(end)}(end))-1));
+        post = binTrials(logical((binTrials>=trials{gblocks{j}(end)+1}(1)) + (binTrials<=trials{gblocks{j}(end)+1}(end))-1));
         
         subplot(3,4,i)
         histogram(dirError{j}(early,:),edges,'Normalization','pdf')
@@ -328,112 +345,112 @@ for j = 1:Ngroup
     end
 end
 
-%% bootstrap confidence intervals for direction error
-rng(1);
-
-boot = NaN(1000,Nblock,Ngroup);
-for k = 1:Ngroup
-    Nsubj = length(d.(groups{k}));
-    for j = 1:Nblock
-        trial = trials{gblocks(k,j)};
-        nSamples = numel(dirError{k}(trial,:));
-        for i = 1:1000
-            sample = datasample(reshape(dirError{k}(trial,:),[nSamples 1]),13);
-            boot(i,j,k) = std(sample);
-        end
-    end
+% %% bootstrap confidence intervals for direction error
+% 
+% boot = NaN(1000,Nblock,Ngroup);
+% for k = 1:Ngroup
+%     Nsubj = length(d.(groups{k}));
+%     for j = 1:Nblock
+%         trial = trials{gblocks(k,j)};
+%         nSamples = numel(dirError{k}(trial,:));
+%         for i = 1:1000
+%             sample = datasample(reshape(dirError{k}(trial,:),[nSamples 1]),13);
+%             boot(i,j,k) = std(sample);
+%         end
+%     end
+% end
+% 
+% col = lines;
+% col = col(1:7,:);
+% 
+% figure(6); clf; hold on
+% for j = 1:Ngroup
+%     subplot(3,1,j); hold on
+%     for i = 1:Nblock
+% %         histogram(boot(:,i,j),0:2:120,'Normalization','pdf','FaceColor',col(i,:))
+%         [f,xi] = ksdensity(boot(:,i,j));
+%         plot(xi,f,'Color',col(i,:),'LineWidth',2)
+%     end
+%     if j == 2
+%         ylabel('Probability')
+%     end
+%     ylim([0 0.3])
+% end
+% xlabel('Standard deviation of directional error (degrees)')
+% legend(blocks)
+% 
+% boot = sort(boot,1);
+% confInterval = boot([26 975],:,:);
+% bootMu = mean(boot,1);
+% confDiff = abs(confInterval - repmat(bootMu,[2 1 1]));
+% bootMu = squeeze(bootMu);
+% 
+% figure(7); clf; hold on
+% for i = 1:3
+%     errorbar(i,bootMu(1,i),confDiff(1,1,i),confDiff(2,1,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2)
+%     errorbar(i+4,bootMu(2,i),confDiff(1,2,i),confDiff(2,2,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2,'HandleVisibility','off')
+%     errorbar(i+8,bootMu(3,i),confDiff(1,3,i),confDiff(2,3,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2,'HandleVisibility','off')
+% end
+% xticks(2:4:10)
+% xticklabels(blocks)
+% xlim([0.5 11.5])
+% ylabel('Standard deviation of directional error (degrees)')
+% legend(graph_names)
+% 
+% %%
+% Ntrials2 = 100;
+% trialsAll = {1:100,101:200,201:300};
+% for k = 1:3
+%     trials = trialsAll{k};
+%     for i = 1:Ngroup
+%         Nsubj = length(d.(groups{i}));
+%         for j = 1:Nsubj
+%             ang = atan2(d.(groups{i}){j}.targetRel(trials,2), d.(groups{i}){j}.targetRel(trials,1));
+%             angMir = atan2(d.(groups{i}){j}.targetRel(trials,2), -d.(groups{i}){j}.targetRel(trials,1));
+% 
+%             dir = d.(groups{i}){j}.initDir_noRot(trials)';
+% 
+%             error{i}(:,j) = dir-ang;
+%             errorMir{i}(:,j) = dir-angMir;
+%         end
+%         
+%         for l = 1:numel(error{i})
+%             while error{i}(l) >= pi
+%                 error{i}(l) = error{i}(l)-2*pi;
+%             end
+%             while error{i}(l) < -pi
+%                 error{i}(l) = error{i}(l)+2*pi;
+%             end
+%             while errorMir{i}(l) >= pi
+%                 errorMir{i}(l) = errorMir{i}(l)-2*pi;
+%             end
+%             while errorMir{i}(l) < -pi
+%                 errorMir{i}(l) = errorMir{i}(l)+2*pi;
+%             end
+%         end
+%         
+%         towardMir{i}.all(:,k) = sum(abs(error{i})>abs(errorMir{i}),1);
+%         towardMir{i}.mean(k) = mean(towardMir{i}.all(:,k),1);
+%     end
+% end
+% 
+% figure(9); clf; hold on
+% for i = 1:3
+%     plot(i,towardMir{1}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
+%     plot(i,towardMir{1}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
+%     
+%     plot(i+4,towardMir{2}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
+%     plot(i+4,towardMir{2}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
+%     
+%     plot(i+8,towardMir{3}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
+%     plot(i+8,towardMir{3}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
+% end
+% xticks([2 6 10])
+% xticklabels(graph_names)
+% ylabel('Percent towards mirrored target')
+% axis([0.5 11.5 0 70])
+% box off
 end
-
-col = lines;
-col = col(1:7,:);
-
-figure(6); clf; hold on
-for j = 1:Ngroup
-    subplot(3,1,j); hold on
-    for i = 1:Nblock
-%         histogram(boot(:,i,j),0:2:120,'Normalization','pdf','FaceColor',col(i,:))
-        [f,xi] = ksdensity(boot(:,i,j));
-        plot(xi,f,'Color',col(i,:),'LineWidth',2)
-    end
-    if j == 2
-        ylabel('Probability')
-    end
-    ylim([0 0.3])
-end
-xlabel('Standard deviation of directional error (degrees)')
-legend(blocks)
-
-boot = sort(boot,1);
-confInterval = boot([26 975],:,:);
-bootMu = mean(boot,1);
-confDiff = abs(confInterval - repmat(bootMu,[2 1 1]));
-bootMu = squeeze(bootMu);
-
-figure(7); clf; hold on
-for i = 1:3
-    errorbar(i,bootMu(1,i),confDiff(1,1,i),confDiff(2,1,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2)
-    errorbar(i+4,bootMu(2,i),confDiff(1,2,i),confDiff(2,2,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2,'HandleVisibility','off')
-    errorbar(i+8,bootMu(3,i),confDiff(1,3,i),confDiff(2,3,i),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'LineWidth',2,'HandleVisibility','off')
-end
-xticks(2:4:10)
-xticklabels(blocks)
-xlim([0.5 11.5])
-ylabel('Standard deviation of directional error (degrees)')
-legend(graph_names)
-
-%%
-Ntrials2 = 100;
-trialsAll = {1:100,101:200,201:300};
-for k = 1:3
-    trials = trialsAll{k};
-    for i = 1:Ngroup
-        Nsubj = length(d.(groups{i}));
-        for j = 1:Nsubj
-            ang = atan2(d.(groups{i}){j}.targetRel(trials,2), d.(groups{i}){j}.targetRel(trials,1));
-            angMir = atan2(d.(groups{i}){j}.targetRel(trials,2), -d.(groups{i}){j}.targetRel(trials,1));
-
-            dir = d.(groups{i}){j}.initDir_noRot(trials)';
-
-            error{i}(:,j) = dir-ang;
-            errorMir{i}(:,j) = dir-angMir;
-        end
-        
-        for l = 1:numel(error{i})
-            while error{i}(l) >= pi
-                error{i}(l) = error{i}(l)-2*pi;
-            end
-            while error{i}(l) < -pi
-                error{i}(l) = error{i}(l)+2*pi;
-            end
-            while errorMir{i}(l) >= pi
-                errorMir{i}(l) = errorMir{i}(l)-2*pi;
-            end
-            while errorMir{i}(l) < -pi
-                errorMir{i}(l) = errorMir{i}(l)+2*pi;
-            end
-        end
-        
-        towardMir{i}.all(:,k) = sum(abs(error{i})>abs(errorMir{i}),1);
-        towardMir{i}.mean(k) = mean(towardMir{i}.all(:,k),1);
-    end
-end
-
-figure(9); clf; hold on
-for i = 1:3
-    plot(i,towardMir{1}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
-    plot(i,towardMir{1}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
-    
-    plot(i+4,towardMir{2}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
-    plot(i+4,towardMir{2}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
-    
-    plot(i+8,towardMir{3}.all(:,i),'.','Color',col(i,:),'MarkerSize',15)
-    plot(i+8,towardMir{3}.mean(i),'.','Color',col(i,:),'MarkerSize',40)
-end
-xticks([2 6 10])
-xticklabels(graph_names)
-ylabel('Percent towards mirrored target')
-axis([0.5 11.5 0 70])
-box off
 
 % function for computing log-likelihod
 function neg_log_likelihood = calc_likelihood(params,samples,Pr_vm)

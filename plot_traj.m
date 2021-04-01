@@ -3,7 +3,7 @@ function plot_traj(d)
 % plot 10 reaches from baseline, early, and late learning
 
 % set variables for plotting
-subj = [2 6 5]; % select which participants to plot from each group
+subj = [2 6 1]; % select which participants to plot from each group
 trials{1} = [1:10; 31:40; 331:340]; % trials to plot for 2-day group
 trials{2} = [1:10; 31:40; 1251:1260]; % trials to plot for 5-day group
 trials{3} = [1:10; 31:40; 2811:2820]; % trials to plot for 10-day group
@@ -25,22 +25,25 @@ for k = 1:Ngroup % loop over groups
         a = d.(groups{k}){s};
         
         for i = trials{k}(j,:) % loop over trials
-            plot(a.targetAbs(i,1),a.targetAbs(i,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 15); % plot targets
+            plot(a.targetAbs(i,1),a.targetAbs(i,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 13); % plot targets
             plot(a.L{i}(:,1),a.L{i}(:,2),'Color',col(1,:)) % plot left hand
             plot(a.R{i}(:,1),a.R{i}(:,2),'Color',col(2,:)) % plot right hand
             plot(a.C{i}(:,1),a.C{i}(:,2),'k') % plot cursor
         end
-        axis([0.1 0.95 -0.2 0.65])
+        axis([0.1 1 -0.2 0.65])
         axis square
         if k == 1
             title(titles{j})
+            if j == 1
+                plot([0.4 0.52],[0.5 0.5],'k','LineWidth',4)
+            end
         end
         if j == 1
             ylabel(groupNames{k})
         end
     end
 end
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/traj','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj','-dpdf','-painters')
 
 %% plot reaches from flip block
 
@@ -90,9 +93,9 @@ for j = 1:Ngroup % loop over groups
             end
         elseif i == 2 && j == 1
             ylabel('Away trial')
+            plot([0.46 0.58],[0.2 0.2],'k','LineWidth',4)
         end
     end
 end
-
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
 end
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/traj_habit','-dpdf','-painters')
