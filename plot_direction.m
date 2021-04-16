@@ -1,4 +1,4 @@
-function plot_direction(d, vmFit)
+function plot_direction(d)
 
 % set variables for analysis
 rng(2);
@@ -46,102 +46,95 @@ end
 %% fit mixture model for each participant
 vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
 
-if nargin > 1
-    mu_opt = vmFit.mu_opt;
-    kappa_opt = vmFit.kappa_opt;
-    weight_opt = vmFit.weight_opt;
-    sd = vmFit.sd;
-else
-    tolerance = 0.01; % tolerance for stopping EM loop
-    
-    % set values for initial parameters for EM loop
-    muInit = 0;
-    kappaInit = 1;
-    weightInit = 0.99;
-    
-    % preallocate variables for parameters
-    mu_opt = NaN(Nblock,Ngroup,max(allSubj));
-    kappa_opt = NaN(Nblock,Ngroup,max(allSubj));
-    weight_opt = NaN(Nblock,Ngroup,max(allSubj));
-    sd = NaN(Nblock,Ngroup,max(allSubj));
-    
-    % main loop for EM
-    for k = 1:Ngroup
-        Nsubj = length(d.(groups{k}));
-        for m = 1:Nsubj
-            for j = 1:Nblock
+tolerance = 0.01; % tolerance for stopping EM loop
+
+% set values for initial parameters for EM loop
+muInit = 0;
+kappaInit = 1;
+weightInit = 0.99;
+
+% preallocate variables for parameters
+mu_opt = NaN(Nblock,Ngroup,max(allSubj));
+kappa_opt = NaN(Nblock,Ngroup,max(allSubj));
+weight_opt = NaN(Nblock,Ngroup,max(allSubj));
+sd = NaN(Nblock,Ngroup,max(allSubj));
+
+% main loop for EM
+for k = 1:Ngroup
+    Nsubj = length(d.(groups{k}));
+    for m = 1:Nsubj
+        for j = 1:Nblock
+            
+            % select trials to analyze and store in samples
+            trial = trials{gblocks{k}(j)};
+            samples = dirError{k}(trial,m)*pi/180; % convert error to radians
+            samples = samples(~isnan(samples));
+            
+            % initialize mu and kappa for the VM distribution and the
+            % relative weight between the VM and uniform distributions
+            mu = muInit;
+            kappa = kappaInit;
+            weight = weightInit;
+            idx = 1; % index for tracking number of EM iterations
+            proceed = true; % flag for stopping EM loop
+            
+            % EM loop
+            while proceed
                 
-                % select trials to analyze and store in samples
-                trial = trials{gblocks{k}(j)};
-                samples = dirError{k}(trial,m)*pi/180; % convert error to radians
-                samples = samples(~isnan(samples));
+                % expectation step
+                Pr_vm = weight * vmPDF(samples, mu, kappa) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
+                Pr_unif = (1-weight) * (1 / (2*pi)) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
                 
-                % initialize mu and kappa for the VM distribution and the
-                % relative weight between the VM and uniform distributions
-                mu = muInit;
-                kappa = kappaInit;
-                weight = weightInit;
-                idx = 1; % index for tracking number of EM iterations
-                proceed = true; % flag for stopping EM loop
+                % maximization step
+                log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm);
+                paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
+                [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
                 
-                % EM loop
-                while proceed
-                    
-                    % expectation step
-                    Pr_vm = weight * vmPDF(samples, mu, kappa) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
-                    Pr_unif = (1-weight) * (1 / (2*pi)) ./ (weight * vmPDF(samples, mu, kappa) + (1-weight) * (1 / (2*pi)));
-                    
-                    % maximization step
-                    log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm);
-                    paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
-                    [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
-                    
-                    % assign optimized values of parameters
-                    mu = params_opt(1);
-                    kappa = params_opt(2);
-                    weight = params_opt(3);
-                    
-                    % keep track of log-likelihood to terminate EM loop
-                    history{k}{m}{j}(idx) = fval;
-                    
-                    % terminate loop if change in log-likelihood is smaller
-                    % than tolerance,
-                    if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
-                        proceed = false;
-                    end
-                    idx = idx + 1; % increment loop iteration number
-                    
-%                     % analytical approach to solve MLE
-%                     xBar = mean(exp(1j*vmSamples));
-%                     R = norm(xBar);
-%                     mu = angle(xBar);
-%                     kappa = R * (2 - R^2) ./ (1 - R^2);
-%                     
-%                     if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
-%                         proceed = false;
-%                     end
-%                     idx = idx + 1;
+                % assign optimized values of parameters
+                mu = params_opt(1);
+                kappa = params_opt(2);
+                weight = params_opt(3);
+                
+                % keep track of log-likelihood to terminate EM loop
+                history{k}{m}{j}(idx) = fval;
+                
+                % terminate loop if change in log-likelihood is smaller
+                % than tolerance,
+                if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
+                    proceed = false;
                 end
+                idx = idx + 1; % increment loop iteration number
                 
-                % store fitted parameter values
-                mu_opt(j,k,m) = mu;
-                kappa_opt(j,k,m) = kappa;
-                weight_opt(j,k,m) = weight;
-                
-                % compute circular standard deviation
-                R = (besseli(1,kappa)/besseli(0,kappa));
-                sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
+%                 % analytical approach to solve MLE
+%                 xBar = mean(exp(1j*vmSamples));
+%                 R = norm(xBar);
+%                 mu = angle(xBar);
+%                 kappa = R * (2 - R^2) ./ (1 - R^2);
+%                 
+%                 if idx > 1 && abs(history{k}{m}{j}(idx) - history{k}{m}{j}(idx-1)) < tolerance
+%                     proceed = false;
+%                 end
+%                 idx = idx + 1;
             end
+            
+            % store fitted parameter values
+            mu_opt(j,k,m) = mu;
+            kappa_opt(j,k,m) = kappa;
+            weight_opt(j,k,m) = weight;
+            
+            % compute circular standard deviation
+            R = (besseli(1,kappa)/besseli(0,kappa));
+            sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
         end
     end
-    
-    vmFit.mu_opt = mu_opt;
-    vmFit.kappa_opt = kappa_opt;
-    vmFit.weight_opt = weight_opt;
-    vmFit.sd = sd;
-    
-    save('variables/vmFit.mat','vmFit')
 end
+
+vmFit.mu_opt = mu_opt;
+vmFit.kappa_opt = kappa_opt;
+vmFit.weight_opt = weight_opt;
+vmFit.sd = sd;
+
+save('variables/vmFit.mat','vmFit')
 
 % points to assess the PDF
 delt = pi/64;
@@ -458,9 +451,9 @@ function neg_log_likelihood = calc_likelihood(params,samples,Pr_vm)
     kappa = params(2);
     weight = params(3);
     
-    likelihood_unif = (1 - Pr_vm) .* log(1 - weight);
-    likelihood_vm = Pr_vm .* (log(weight) + log(exp(kappa * cos(samples-mu)) / (2 * pi * besseli(0,kappa))));
+    likelihood_unif = (1 - Pr_vm) .* ((1 - weight) / (2*pi));
+    likelihood_vm = Pr_vm .* (weight * exp(kappa * cos(samples-mu)) / (2 * pi * besseli(0,kappa)));
     
-    likelihood_all = [likelihood_unif likelihood_vm];
-    neg_log_likelihood = -sum(sum(likelihood_all,2),1);
+    likelihood_all = sum([likelihood_unif likelihood_vm],2);
+    neg_log_likelihood = -sum(log(likelihood_all));
 end

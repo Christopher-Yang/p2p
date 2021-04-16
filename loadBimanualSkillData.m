@@ -50,6 +50,7 @@ disp('All Done')
 plot_traj(d);
 plot_kinematics(d);
 plot_habit(d);
+plot_direction(d);
 
-load('variables/vmFit')
-plot_direction(d,vmFit)
+% load('variables/vmFit')
+% plot_direction(d,vmFit)
