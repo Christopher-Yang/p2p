@@ -1,7 +1,8 @@
 % rotate reach directions into quadrant 1 and plot histograms
+function plot_habitMLE(d, vmFit)
 
 rng(2);
-load variables/vmFit
+% load variables/vmFit
 groups = fieldnames(d);
 graph_names = {'2-day','5-day','10-day'};
 blocks = {'Baseline','Early','Late'};
@@ -141,7 +142,11 @@ weight2 = 0.33;
 for k = 1:4
     for j = 1:Ngroup
         for i = 1:allSubj(j)
-            kappa = vmFit.kappa_opt(block,j,i);
+            if k < 4
+                kappa = vmFit.kappa_opt(k,j,i);
+            else
+                kappa = vmFit.kappa_opt(3,j,i);
+            end
             idx = ~isnan(dir_rot{j}(:,i,k));
             
             log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,k), target_q1{j}(idx,k), target_q2{j}(idx,k), kappa);
@@ -158,9 +163,24 @@ for k = 1:4
     end
 end
 
+% dlmwrite('C:/Users/Chris/Documents/R/habit/data/sd.csv', z)
+
 %% plot P(habitual)
 figure(3); clf
-subplot(1,2,1); hold on
+subplot(1,3,1); hold on
+for i = 1:3
+    n = allSubj(i);
+    plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), weight1_opt{i}, '.', 'MarkerSize', 20, 'Color', col2(i,:), 'HandleVisibility', 'off')
+    plot(xAxis(i,:), mean(weight1_opt{i}), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', col2(i,:), 'LineWidth', 1)
+end
+xticks([1 3 5 8 13 15.5])
+xticklabels({'Baseline',1,2,5,10,'Flip'})
+xlabel('Day')
+axis([0 16.5 0 1])
+ylabel('P(GD)')
+set(gca,'TickDir','out')
+
+subplot(1,3,2); hold on
 for i = 1:3
     n = allSubj(i);
     plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), weight2_opt{i}, '.', 'MarkerSize', 20, 'Color', col2(i,:), 'HandleVisibility', 'off')
@@ -169,12 +189,25 @@ end
 xticks([1 3 5 8 13 15.5])
 xticklabels({'Baseline',1,2,5,10,'Flip'})
 xlabel('Day')
-axis([0 16.5 0 0.8])
+axis([0 16.5 0 1])
 ylabel('P(habitual)')
+set(gca,'TickDir','out')
+
+subplot(1,3,3); hold on
+for i = 1:3
+    n = allSubj(i);
+    plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), weight3_opt{i}, '.', 'MarkerSize', 20, 'Color', col2(i,:), 'HandleVisibility', 'off')
+    plot(xAxis(i,:), mean(weight3_opt{i}), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', col2(i,:), 'LineWidth', 1)
+end
+xticks([1 3 5 8 13 15.5])
+xticklabels({'Baseline',1,2,5,10,'Flip'})
+xlabel('Day')
+axis([0 16.5 0 1])
+ylabel('P(noise)')
 set(gca,'TickDir','out')
 legend(graph_names)
 
-subplot(1,2,2); hold on
+figure(4); clf; hold on
 for i = 1:3
     weight2_frac = weight2_opt{i} ./ (weight1_opt{i} + weight2_opt{i});
 
@@ -188,6 +221,8 @@ xlabel('Day')
 axis([0 16.5 0 0.8])
 ylabel('P(habitual) / [P(habitual) + P(GD)]')
 set(gca,'TickDir','out')
+
+end
 
 function neg_log_likelihood = calc_likelihood(weights, samples, target_q1, target_q2, kappa)
     vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution

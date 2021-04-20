@@ -88,7 +88,7 @@ for k = 1:Ngroup
                 % maximization step
                 log_likelihood = @(params) calc_likelihood(params, samples, Pr_vm);
                 paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
-                [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 100 1]);
+                [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 200 1]);
                 
                 % assign optimized values of parameters
                 mu = params_opt(1);
@@ -145,6 +145,13 @@ sd_mu = nanmean(sd,3);
 sd_sd = nanstd(sd,[],3);
 
 sd2 = permute(sd,[1 3 2]);
+
+% save data for analysis in R
+% z = [];
+% for i = 1:3
+%     z = [z; reshape(sd2(:,1:allSubj(i),i), [allSubj(i)*3 1])];
+% end
+% dlmwrite('C:/Users/Chris/Documents/R/habit/data/sd.csv', z)
 
 %% plot mixture model fit on top of data histograms
 subj = 2; % choose which subject to plot fits for
