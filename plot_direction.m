@@ -123,7 +123,7 @@ for k = 1:Ngroup
             weight_opt(j,k,m) = weight;
             
             % compute circular standard deviation
-            R = (besseli(1,kappa)/besseli(0,kappa));
+            R = besseli(1,kappa)/besseli(0,kappa);
             sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
         end
     end

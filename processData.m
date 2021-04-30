@@ -143,7 +143,6 @@ for i=1:data.Ntrials
     end
     
     initDir_noRot = atan2(vel_C(iDir,2),vel_C(iDir,1));
-    initDir_noRot = initDir_noRot;
     while initDir_noRot >= pi
         initDir_noRot = initDir_noRot-2*pi;
     end

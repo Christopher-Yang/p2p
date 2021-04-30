@@ -130,5 +130,3 @@ for j=1:data.Ntrials % iterate through all trials
     data.Cr_mir{j} = (R*(data.C{j}'-repmat(start(j,:),size(data.C{j},1),1)'))';
     data.Nr_mir{j} = (R*(data.N{j}'))';
 end
-data.theta = theta;
-data.thetaMir = thetaMir;
