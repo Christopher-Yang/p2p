@@ -107,50 +107,51 @@ end
 
 %% 
 
-% Ntrials = 50;
-% 
-% up_sim = rand(50, Ntrials) * pi;
-% down_sim = rand(50, Ntrials) * -pi;
-% test = [up_sim; down_sim];
-% 
-% A = [-1 0; 0 -1; 1 1];
-% b = [0 0 1]';
-% 
-% up_sim = rand(50, 1) * pi;
-% down_sim = rand(50, 1) * -pi;
-% targets = [up_sim; down_sim];
-% targ_dir = [cos(targets) sin(targets)];
-% targ_dir(:,1) = -targ_dir(:,1);
-% targets2 = atan2(targ_dir(:,2), targ_dir(:,1));
-% 
-% weight1 = 0.33;
-% weight2 = 0.33;
-% kappa = [0:0.00001:0.0001];
-% 
-% weight1_sim = NaN(Ntrials, length(kappa));
-% weight2_sim = NaN(Ntrials, length(kappa));
-% weight3_sim = NaN(Ntrials, length(kappa));
-% 
-% for j = 1:length(kappa)
-%     for i = 1:Ntrials
-%         log_likelihood = @(params) calc_likelihood2(params, test(:,i), targets, targets2, kappa(j));
-%         
-%         paramsInit = [weight1 weight2];
-%         params_opt = fmincon(log_likelihood, paramsInit, A, b);
-%         
-%         weight1_sim(i,j) = params_opt(1);
-%         weight2_sim(i,j) = params_opt(2);
-%         weight3_sim(i,j) = 1 - sum(params_opt);
-%     end
-% end
-% 
-% figure(7); clf; hold on
-% plot(kappa, mean(weight1_sim))
-% plot(kappa, mean(weight2_sim))
-% plot(kappa, mean(weight3_sim))
-% legend({'P(GD)','P(habit)','P(random)'}, 'Location', 'southeast')
-% xlabel('kappa')
-% ylabel('probability')
+Ntrials = 50;
+
+% this is not right, targets and direction not matched up and down
+up_sim = rand(50, Ntrials) * pi;
+down_sim = rand(50, Ntrials) * -pi;
+test = [up_sim; down_sim];
+
+A = [-1 0; 0 -1; 1 1];
+b = [0 0 1]';
+
+up_sim = rand(50, 1) * pi;
+down_sim = rand(50, 1) * -pi;
+targets = [up_sim; down_sim];
+targ_dir = [cos(targets) sin(targets)];
+targ_dir(:,1) = -targ_dir(:,1);
+targets2 = atan2(targ_dir(:,2), targ_dir(:,1));
+
+weight1 = 0.5;
+weight2 = 0.5;
+kappa = 0:2:20;
+
+weight1_sim = NaN(Ntrials, length(kappa));
+weight2_sim = NaN(Ntrials, length(kappa));
+weight3_sim = NaN(Ntrials, length(kappa));
+
+for j = 1:length(kappa)
+    for i = 1:Ntrials
+        log_likelihood = @(params) calc_likelihood2(params, test(:,i), targets, targets2, kappa(j));
+        
+        paramsInit = [weight1 weight2];
+        params_opt = fmincon(log_likelihood, paramsInit, A, b);
+        
+        weight1_sim(i,j) = params_opt(1);
+        weight2_sim(i,j) = params_opt(2);
+        weight3_sim(i,j) = 1 - sum(params_opt);
+    end
+end
+
+figure(7); clf; hold on
+plot(kappa, mean(weight1_sim))
+plot(kappa, mean(weight2_sim))
+plot(kappa, mean(weight3_sim))
+legend({'P(GD)','P(habit)','P(random)'}, 'Location', 'southeast')
+xlabel('kappa')
+ylabel('probability')
 
 %% MLE on random data
 
@@ -314,17 +315,26 @@ end
 for j = 1:Ngroup
     for i = 1:allSubj(j)
         vel = d.(groups{j}){i}.initVel_filt(end-99:end);
+        velX = d.(groups{j}){i}.initVel_x(end-99:end);
         RT = d.(groups{j}){i}.RT(end-99:end);
         
         vel_gd{j}(i) = mean(vel(Pr_idx{j}(:,i) == 1));
         vel_hab{j}(i) = mean(vel(Pr_idx{j}(:,i) == 2));
+        velX_gd{j}(i) = nanmean(abs(velX(Pr_idx{j}(:,i) == 1)));
+        velX_hab{j}(i) = nanmean(abs(velX(Pr_idx{j}(:,i) == 2)));
         RT_gd{j}(i) = mean(RT(Pr_idx{j}(:,i) == 1));
         RT_hab{j}(i) = mean(RT(Pr_idx{j}(:,i) == 2));
     end
 end
 
+% z = [vel_gd{1}'; vel_gd{2}'; vel_gd{3}'; vel_hab{1}'; vel_hab{2}'; vel_hab{3}'];
+% dlmwrite('C:/Users/Chris/Documents/R/habit/data/vel.csv', z)
+% 
+% z = [RT_gd{1}'; RT_gd{2}'; RT_gd{3}'; RT_hab{1}'; RT_hab{2}'; RT_hab{3}'];
+% dlmwrite('C:/Users/Chris/Documents/R/habit/data/RT.csv', z)
+
 figure(11); clf
-subplot(1,2,1); hold on
+subplot(1,3,1); hold on
 for j = 1:Ngroup
     plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), vel_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
     plot(j, mean(vel_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10, 'HandleVisibility', 'off')
@@ -333,14 +343,30 @@ for j = 1:Ngroup
     plot(j + 4, mean(vel_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10)
 end
 xticks([2 6])
-xticklabels({'Goal-directed', 'Habitual'})
+xticklabels({'Actual', 'Mirrored'})
 xlim([0.5 7.5])
 yticks(0.05:0.1:0.35)
 ylabel('Velocity (m/s)')
 set(gca,'Tickdir','out')
 legend(graph_names)
 
-subplot(1,2,2); hold on
+subplot(1,3,2); hold on
+for j = 1:Ngroup
+    plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), velX_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
+    plot(j, mean(velX_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10, 'HandleVisibility', 'off')
+    
+    plot(j + 4 + 0.5 * (rand(allSubj(j),1) - 0.5), velX_hab{j}, '.', 'Color', col2(j,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
+    plot(j + 4, mean(velX_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10)
+end
+xticks([2 6])
+xticklabels({'Actual', 'Mirrored'})
+xlim([0.5 7.5])
+% yticks(0.05:0.1:0.35)
+ylabel('Velocity (m/s)')
+set(gca,'Tickdir','out')
+legend(graph_names)
+
+subplot(1,3,3); hold on
 for j = 1:Ngroup
     plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), RT_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 20, 'HandleVisibility', 'off')
     plot(j, mean(RT_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10, 'HandleVisibility', 'off')
@@ -349,7 +375,7 @@ for j = 1:Ngroup
     plot(j + 4, mean(RT_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 10)
 end
 xticks([2 6])
-xticklabels({'Goal-directed', 'Habitual'})
+xticklabels({'Actual', 'Mirrored'})
 xlim([0.5 7.5])
 yticks(300:200:1100)
 ylabel('RT (ms)')
@@ -469,7 +495,7 @@ xticks([1 3 5 8 13 15.5])
 xticklabels({'Baseline',1,2,5,10,'Flip'})
 xlabel('Day')
 axis([0 16.5 0 1])
-ylabel('\alpha_h')
+ylabel('\alpha_m')
 set(gca,'TickDir','out')
 legend(graph_names)
 

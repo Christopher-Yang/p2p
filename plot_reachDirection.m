@@ -18,32 +18,64 @@ for i = 1:3
         plot([-180 180], [0 0], 'k')
         plot([0 0], [-180 180], 'k')
         scatter(targ(1:30), reach(1:30), 10, 'r', 'filled', 'MarkerFaceAlpha', 0.2)
-        axis equal
-        title('Baseline')
+        if subj == 1
+            xticks(-180:180:180)
+            yticks(-180:180:180)
+            axis([-180 180 -180 180])
+            axis square
+            set(gca,'TickDir','out')
+            if i == 1
+                title('Baseline')
+            end
+        end
         
         subplot(3,4,4*(i-1)+2); hold on
         plot([-180 180], [-180 180], 'k')
         plot([-180 180], [0 0], 'k')
         plot([0 0], [-180 180], 'k')
         scatter(targ(31:130), reach(31:130), 10, 'r', 'filled', 'MarkerFaceAlpha', 0.2)
-        axis equal
-        title('Early')
+        if subj == 1
+            xticks(-180:180:180)
+            yticks(-180:180:180)
+            axis([-180 180 -180 180])
+            axis square
+            set(gca,'TickDir','out')
+            if i == 1
+                title('Early')
+            end
+        end
         
         subplot(3,4,4*(i-1)+3); hold on
         plot([-180 180], [-180 180], 'k')
         plot([-180 180], [0 0], 'k')
         plot([0 0], [-180 180], 'k')
         scatter(targ(end-199:end-100), reach(end-199:end-100), 10, 'r', 'filled', 'MarkerFaceAlpha', 0.2)
-        axis equal
-        title('Late')
+        if subj == 1
+            xticks(-180:180:180)
+            yticks(-180:180:180)
+            axis([-180 180 -180 180])
+            axis square
+            set(gca,'TickDir','out')
+            if i == 1
+                title('Late')
+            end
+        end
         
         subplot(3,4,4*(i-1)+4); hold on
         plot([-180 180], [-180 180], 'k')
         plot([-180 180], [0 0], 'k')
         plot([0 0], [-180 180], 'k')
         scatter(targ(end-99:end), reach(end-99:end), 10, 'r', 'filled', 'MarkerFaceAlpha', 0.2)
-        axis equal
-        title('Flip')
+        if subj == 1
+            xticks(-180:180:180)
+            yticks(-180:180:180)
+            axis([-180 180 -180 180])
+            axis square
+            set(gca,'TickDir','out')
+            if i == 1
+                title('Flip')
+            end
+        end
     end
 end
 
@@ -81,7 +113,7 @@ end
 
 n = length(bins)-1;
 clims = [0 0.075];
-figure(1); clf
+figure(2); clf
 for j = 1:Ngroup
     for k = 1:4
         subplot(Ngroup, 4, 4*(j-1) + k); hold on
