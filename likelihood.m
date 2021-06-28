@@ -10,11 +10,15 @@ targ_hab = atan2(targ_dir(:,2), targ_dir(:,1));
 % generate data from mixture model
 mu1 = pi/4;
 mu2 = atan2(sin(mu1), -cos(mu1));
-w1 = 0.4;
-w2 = 0.4;
-kappa_real = 0.1;
+w1 = 0.5;
+w2 = 0.2;
+kappa_real = 3;
 
-Nsims = 50;
+weight1 = 0:0.05:1;
+weight2 = 0:0.05:1;
+kappa = 1:10;
+
+Nsims = 13;
 test = NaN(Nsims, 3);
 for m = 1:Nsims
     
@@ -27,10 +31,6 @@ for m = 1:Nsims
     data_mix = [data1; data2];
     data3 = 2*pi*(rand(Ntrials-length(data_mix), 1) - 0.5);
     data_mix = [data_mix; data3];
-
-    weight1 = 0:0.05:1;
-    weight2 = 0:0.05:1;
-    kappa = 1:30;
 
     like = NaN(length(weight1), length(weight2), length(kappa));
     for k = 1:length(kappa)
@@ -62,11 +62,11 @@ for m = 1:Nsims
     % legend({'True params','Max likelihood'})
     
     like_vec = like(:);
-%     for i = 1:numel(like_vec)
-%         if like_vec(i) < -200
-%             like_vec(i) = NaN;
-%         end
-%     end
+    for i = 1:numel(like_vec)
+        if like_vec(i) < -200
+            like_vec(i) = NaN;
+        end
+    end
     
     [~, idx] = max(like_vec);
     
@@ -80,8 +80,6 @@ for m = 1:Nsims
     test(m,:) = [x(idx) y(idx) z(idx)];
 end
 
-
-%%
 
 figure(2); clf
 scatter3(x, y, z, 15, like_vec); hold on
