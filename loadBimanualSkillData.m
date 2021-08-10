@@ -52,5 +52,4 @@ plot_kinematics(d);
 plot_habit(d);
 plot_direction(d);
 
-load('variables/vmFit')
-plot_habitMLE(d,vmFit)
+plot_habitMLE(d)

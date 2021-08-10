@@ -6,26 +6,25 @@ delay = 20; % time after reach initiation to compute initial reach direction
 for i=1:data.Ntrials
     % smooth trajectories
     data.Cr{i} = sgolayfilt(data.Cr{i},3,7);
+    data.Cr_mir{i} = sgolayfilt(data.Cr_mir{i},3,7);
     data.Nr{i} = sgolayfilt(data.Nr{i},3,7);
     data.C{i} = sgolayfilt(data.C{i},3,7);
     
-    % remove outliers in time difference for velocity analysis (extremely
-    % high or low values are due to problems in data collection hardware
-    % and result in extreme velocity values)
-    timeDiff = diff(data.time{i}); % find time between samples
-    timeDiff(timeDiff > 11) = NaN; % eliminate times greater than 11 ms
-    timeDiff(timeDiff < 5) = NaN; % eliminate times less than 5 ms
-    timeDiff = timeDiff/1000;
-    
+    fs = 130;
+    time = (data.time{i} - data.time{i}(1))/1000;
+    C = resample(data.C{i},time);
+    Cr = resample(data.Cr{i},time);
+    Cr_mir = resample(data.Cr_mir{i},time);
+        
     % compute velocities
-    vel_C = diff(data.C{i})./timeDiff; % cursor velocity unrotated
-    vel_Cr = diff(data.Cr{i})./timeDiff; % cursor velocity rotated
-    vel_Cr_mir = diff(data.Cr_mir{i})./timeDiff;
+    vel_C = diff(C)*fs; % cursor velocity unrotated
+    vel_Cr = diff(Cr)*fs; % cursor velocity rotated
+    vel_Cr_mir = diff(Cr_mir)*fs;
     
     data.tanVel{i} = sqrt(sum(vel_Cr.^2,2)); % tangential velocity
     data.pkVel(i) = max(data.tanVel{i}); % peak tangential velocity
-    velFilt = sgolayfilt(data.tanVel{i},3,9); % smooth velocity trajectory
-    vel_C = sgolayfilt(vel_C,3,9);
+    velFilt = sgolayfilt(data.tanVel{i},3,7); % smooth velocity trajectory
+    vel_C = sgolayfilt(vel_C,3,7);
     data.vel_C = vel_C;
     
     % some of the differences in time are 0, leading to Inf velocities;

@@ -1,14 +1,13 @@
 % rotate reach directions into quadrant 1 and plot histograms
-function plot_habitMLE(d, vmFit)
+function plot_habitMLE(d)
 
 rng(2);
-% load variables/vmFit
+load variables/vmFit
 groups = fieldnames(d);
 graph_names = {'2-day','5-day','10-day'};
-blocks = {'Baseline','Early','Late'};
 Ngroup = length(groups);
-Nblock = length(blocks);
 allSubj = [length(d.day2) length(d.day5) length(d.day10)];
+tolerance = 0.01; % tolerance for stopping EM loop
 xAxis = [0.5 2.5 5 15
          1 3 8 15.5
          1.5 3.5 13 16];
@@ -23,6 +22,7 @@ end
 gblocks{1} = [1 2 5 6];
 gblocks{2} = [1 2 14 15];
 gblocks{3} = [1 2 29 30];
+Nblock = size(gblocks{1},2);
 
 % set colors for generating plots
 col = lines;
@@ -30,10 +30,6 @@ col = col(1:7,:);
 col2 = [180 180 0
         0 191 255
         255 99 71]./255;
-
-R(:,:,1) = [-1 0; 0 1];
-R(:,:,2) = [-1 0; 0 -1];
-R(:,:,3) = [1 0; 0 -1];
 
 clear target_gd target_hab dir_rot 
 
@@ -43,7 +39,7 @@ for i = 1:Ngroup
     target_gd{i} = NaN(100, 4);
     target_hab{i} = NaN(100, 4);
 
-    for k = 1:4
+    for k = 1:Nblock
         Ntrials = length(d.(groups{i}){1}.Cr);
         Nsubj = length(d.(groups{i}));
         dir = NaN(Ntrials,Nsubj);
@@ -85,19 +81,76 @@ end
 %     end
 % end
 
-for k = 1:4
+% % standard MLE
+% for k = 1:Nblock
+%     for j = 1:Ngroup
+%         for i = 1:allSubj(j)
+%             idx = ~isnan(dir_rot{j}(:,i,k));
+%             
+%             log_likelihood = @(params) calc_likelihood_unif(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k));
+%             
+%             weightInit = 0.8;
+%             [weight_opt, neg_log_likelihood] = fmincon(log_likelihood, weightInit, [], [], [], [], 0, 1);
+%             
+%             log_likelihood = -neg_log_likelihood;
+%             
+%             unifWeight{j}(i,k) = weight_opt;
+%             unif_likelihood{j}(i,k) = log_likelihood;
+%             unif_AIC{j}(i,k) = 2 * length(weightInit) - 2 * log_likelihood;
+%             unif_BIC{j}(i,k) = length(weightInit) * log(sum(idx)) - 2 * log_likelihood;
+%         end
+%     end
+% end
+
+unifPDF = 1/pi;
+weightInit = 0.8;
+% EM
+for k = 1:Nblock
     for j = 1:Ngroup
         for i = 1:allSubj(j)
-            idx = ~isnan(dir_rot{j}(:,i,k));
             
-            log_likelihood = @(params) calc_likelihood_unif(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k));
+            weight = weightInit;
+            idx = 1; % index for tracking number of EM iterations
+            proceed = true; % flag for stopping EM loop
             
-            weightInit = 0.8;
-            [weight_opt, neg_log_likelihood] = fmincon(log_likelihood, weightInit, [], [], [], [], 0, 1);
+            id = ~isnan(dir_rot{j}(:,i,k));
+            samples = dir_rot{j}(id,i,k);
+            gd = target_gd{j}(id,k);
+            same = (gd >= 0) == (samples >= 0);
+            
+%             log_likelihood = @(params) calc_likelihood_unif_em(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k));
+%             
+%             weightInit = 0.8;
+%             [weight_opt, neg_log_likelihood] = fmincon(log_likelihood, weightInit, [], [], [], [], 0, 1);
+            
+            % EM loop
+            while proceed
+                
+                denom = weight * (same * unifPDF) + (1 - weight) * (~same * unifPDF);
+                Pr_unif1 = weight * (same * unifPDF) ./ denom;
+                Pr_unif2 = 1 - Pr_unif1;
+                
+                resp = [Pr_unif1 Pr_unif2];
+                
+                % maximization step
+                log_likelihood = @(params) calc_likelihood_unif_em(params, samples, gd, resp);
+                paramsInit = weight; % set parameters to current values of mu and kappa
+                [weight, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, [], [], [], [], 0, 1);
+                
+                % keep track of log-likelihood to terminate EM loop
+                history(idx) = neg_log_likelihood;
+                
+                % terminate loop if change in log-likelihood is smaller
+                % than tolerance,
+                if idx > 1 && abs(history(idx) - history(idx-1)) < tolerance
+                    proceed = false;
+                end
+                idx = idx + 1; % increment loop iteration number
+            end
             
             log_likelihood = -neg_log_likelihood;
             
-            unifWeight{j}(i,k) = weight_opt;
+            unifWeight{j}(i,k) = weight;
             unif_likelihood{j}(i,k) = log_likelihood;
             unif_AIC{j}(i,k) = 2 * length(weightInit) - 2 * log_likelihood;
             unif_BIC{j}(i,k) = length(weightInit) * log(sum(idx)) - 2 * log_likelihood;
@@ -105,53 +158,55 @@ for k = 1:4
     end
 end
 
-%% 
+%% fit model using fixed kappa
+% this isn't right because it's fitting model to random data. it's not
+% testing parameter recovery at all; commenting this section out until it's
+% needed
 
-Ntrials = 50;
-
-% this is not right, targets and direction not matched up and down
-up_sim = rand(50, Ntrials) * pi;
-down_sim = rand(50, Ntrials) * -pi;
-test = [up_sim; down_sim];
-
-A = [-1 0; 0 -1; 1 1];
-b = [0 0 1]';
-
-up_sim = rand(50, 1) * pi;
-down_sim = rand(50, 1) * -pi;
-targets = [up_sim; down_sim];
-targ_dir = [cos(targets) sin(targets)];
-targ_dir(:,1) = -targ_dir(:,1);
-targets2 = atan2(targ_dir(:,2), targ_dir(:,1));
-
-weight1 = 0.5;
-weight2 = 0.5;
-kappa = 0:2:20;
-
-weight1_sim = NaN(Ntrials, length(kappa));
-weight2_sim = NaN(Ntrials, length(kappa));
-weight3_sim = NaN(Ntrials, length(kappa));
-
-for j = 1:length(kappa)
-    for i = 1:Ntrials
-        log_likelihood = @(params) calc_likelihood2(params, test(:,i), targets, targets2, kappa(j));
-        
-        paramsInit = [weight1 weight2];
-        params_opt = fmincon(log_likelihood, paramsInit, A, b);
-        
-        weight1_sim(i,j) = params_opt(1);
-        weight2_sim(i,j) = params_opt(2);
-        weight3_sim(i,j) = 1 - sum(params_opt);
-    end
-end
-
-figure(7); clf; hold on
-plot(kappa, mean(weight1_sim))
-plot(kappa, mean(weight2_sim))
-plot(kappa, mean(weight3_sim))
-legend({'P(GD)','P(habit)','P(random)'}, 'Location', 'southeast')
-xlabel('kappa')
-ylabel('probability')
+% Ntrials = 50;
+% 
+% up_sim = rand(50, Ntrials) * pi;
+% down_sim = rand(50, Ntrials) * -pi;
+% test = [up_sim; down_sim];
+% 
+% A = [-1 0; 0 -1; 1 1];
+% b = [0 0 1]';
+% 
+% up_sim = rand(50, 1) * pi;
+% down_sim = rand(50, 1) * -pi;
+% targets = [up_sim; down_sim];
+% targ_dir = [cos(targets) sin(targets)];
+% targ_dir(:,1) = -targ_dir(:,1);
+% targets2 = atan2(targ_dir(:,2), targ_dir(:,1));
+% 
+% weight1 = 0.5;
+% weight2 = 0.5;
+% kappa = 0:2:20;
+% 
+% weight1_sim = NaN(Ntrials, length(kappa));
+% weight2_sim = NaN(Ntrials, length(kappa));
+% weight3_sim = NaN(Ntrials, length(kappa));
+% 
+% for j = 1:length(kappa)
+%     for i = 1:Ntrials
+%         log_likelihood = @(params) calc_likelihood2(params, test(:,i), targets, targets2, kappa(j));
+%         
+%         paramsInit = [weight1 weight2];
+%         params_opt = fmincon(log_likelihood, paramsInit, A, b);
+%         
+%         weight1_sim(i,j) = params_opt(1);
+%         weight2_sim(i,j) = params_opt(2);
+%         weight3_sim(i,j) = 1 - sum(params_opt);
+%     end
+% end
+% 
+% figure(7); clf; hold on
+% plot(kappa, mean(weight1_sim))
+% plot(kappa, mean(weight2_sim))
+% plot(kappa, mean(weight3_sim))
+% legend({'P(GD)','P(habit)','P(random)'}, 'Location', 'southeast')
+% xlabel('kappa')
+% ylabel('probability')
 
 %% MLE on random data
 
@@ -232,9 +287,16 @@ ylabel('probability')
 
 %% perform MLE
 vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa)));
-weight1 = 0.33;
-weight2 = 0.33;
-kappaInit = 15;
+% weight1 = 0.33;
+% weight2 = 0.33;
+% kappaInit = 15;
+
+weight1_init = 0.33;
+weight2_init = 0.33;
+kappa_init = 15;
+
+A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
+b = [0 0 1 200 0]';
 
 for k = 1:4
     for j = 1:Ngroup
@@ -244,30 +306,73 @@ for k = 1:4
 %             else
 %                 kappa = vmFit.kappa_opt(3,j,i);
 %             end
-            idx = ~isnan(dir_rot{j}(:,i,k));
+
+%             idx = ~isnan(dir_rot{j}(:,i,k));
+%             
+%             log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k), target_hab{j}(idx,k));
+%             
+%             paramsInit = [weight1 weight2 kappaInit];
+%             A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
+%             b = [0 0 1 200 0]';
+%             [params_opt, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, A, b);
             
-            log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k), target_hab{j}(idx,k));
+            weight1 = weight1_init;
+            weight2 = weight2_init;
+            kappa = kappa_init;
+            idx = 1; % index for tracking number of EM iterations
+            proceed = true; % flag for stopping EM loop
             
-            paramsInit = [weight1 weight2 kappaInit];
-            A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
-            b = [0 0 1 200 0]';
-            [params_opt, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, A, b);
+            id = ~isnan(dir_rot{j}(:,i,k));
+            samples = dir_rot{j}(id,i,k);
+            gd = target_gd{j}(id,k);
+            hab = target_hab{j}(id,k);
+            
+            % EM loop
+            while proceed
+                
+                denom = weight1 * vmPDF(samples, gd, kappa) + weight2 * vmPDF(samples, hab, kappa) + (1-weight1-weight2) * (1 / (2*pi));
+                Pr_gd = weight1 * vmPDF(samples, gd, kappa) ./ denom;
+                Pr_hab = weight2 * vmPDF(samples, hab, kappa) ./ denom;
+                Pr_unif = 1 - sum([Pr_gd Pr_hab],2);
+                
+                resp = [Pr_gd Pr_hab Pr_unif];
+                
+                % maximization step
+                log_likelihood = @(params) calc_likelihood_em(params, samples, gd, hab, resp);
+                paramsInit = [weight1 weight2 kappa]; % set parameters to current values of mu and kappa
+                [params_opt, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, A, b);
+                
+                % assign optimized values of parameters
+                weight1 = params_opt(1);
+                weight2 = params_opt(2);
+                kappa = params_opt(3);
+                
+                % keep track of log-likelihood to terminate EM loop
+                history(idx) = neg_log_likelihood;
+                
+                % terminate loop if change in log-likelihood is smaller
+                % than tolerance,
+                if idx > 1 && abs(history(idx) - history(idx-1)) < tolerance
+                    proceed = false;
+                end
+                idx = idx + 1; % increment loop iteration number
+            end
             
             log_likelihood = -neg_log_likelihood;
             
-            weight1_opt{j}(i,k) = params_opt(1);
-            weight2_opt{j}(i,k) = params_opt(2);
-            weight3_opt{j}(i,k) = 1 - sum(params_opt(1:2));
-            kappa_opt{j}(i,k) = params_opt(3);
+            weight1_opt{j}(i,k) = weight1;
+            weight2_opt{j}(i,k) = weight2;
+            weight3_opt{j}(i,k) = 1 - weight1 - weight2;
+            kappa_opt{j}(i,k) = kappa;
             mix_likelihood{j}(i,k) = log_likelihood;
             mix_AIC{j}(i,k) = 2 * length(paramsInit) - 2 * log_likelihood;
             mix_BIC{j}(i,k) = length(paramsInit) * log(sum(idx)) - 2 * log_likelihood;
             
             if k == 4
                 dat = dir_rot{j}(:,i,k);
-                mix1 = params_opt(1) * vmPDF(dat, target_gd{j}(:,k), params_opt(3));
-                mix2 = params_opt(2) * vmPDF(dat, target_hab{j}(:,k), params_opt(3));
-                mix3 = (1 - sum(params_opt(1:2))) * repelem(1/(2*pi), length(dat))';
+                mix1 = weight1 * vmPDF(dat, target_gd{j}(:,k), kappa);
+                mix2 = weight2 * vmPDF(dat, target_hab{j}(:,k), kappa);
+                mix3 = (1 - weight1 - weight2) * repelem(1/(2*pi), length(dat))';
                 total = mix1 + mix2 + mix3;
                 
                 Pr_gd = mix1 ./ total;
@@ -283,6 +388,17 @@ for k = 1:4
         end
     end
 end
+
+y = [unif_BIC{1}(:,4); unif_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{1}(:,4); mix_BIC{2}(:,4); mix_BIC{3}(:,4)];
+model(1:32,1) = {'uniform'};
+model(33:64,1) = {'mix'};
+
+group([1:13 33:45],1) = {'2-day'};
+group([14:27 46:59],1) = {'5-day'};
+group([28:32 60:64],1) = {'10-day'};
+% [p, tbl, stats] = anovan(y,{model group},'model',2,'varnames',{'model','group'});
+
+% results = multcompare(stats,'Dimension',[1 2],'CType','hsd')
 
 for i = 1:Ngroup
     weight2_frac{i} = weight2_opt{i} ./ (weight1_opt{i} + weight2_opt{i});
@@ -310,7 +426,7 @@ end
 
 % dlmwrite('C:/Users/Chris/Documents/R/habit/data/sd.csv', z)
 
-%%
+%% compare  kinematics between reaches towards mirrored and actual targets
 
 for j = 1:Ngroup
     for i = 1:allSubj(j)
@@ -382,7 +498,7 @@ ylabel('RT (ms)')
 set(gca,'Tickdir','out')
 legend(graph_names)
 
-%% 
+%% compare fits from flip block with fits from 
 figure(1); clf
 subplot(1,2,1); hold on
 plot([0 100], [0 100], 'k')
@@ -469,6 +585,8 @@ for j = 1:4
         ylabel('BIC')
     end
 end
+
+
 
 %% plot P(habitual)
 figure(3); clf
@@ -583,6 +701,32 @@ function neg_log_likelihood = calc_likelihood_unif(weight, samples, target_gd)
     likelihood = [idx ~idx] .* unifPDF;
     likelihood(:,1) = weight .* likelihood(:,1);
     likelihood(:,2) = (1-weight) .* likelihood(:,2);
+    likelihood = sum(likelihood, 2);
+    neg_log_likelihood = -sum(log(likelihood));
+end
+
+function neg_log_likelihood = calc_likelihood_em(params, samples, target_gd, target_hab, resp)
+    pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
+    
+    kappa = params(3);
+    weightUnif = 1 - sum(params(1:2));
+    
+    likelihood_vm1 = resp(:,1) .* (params(1) * pdf(samples, target_gd, kappa));
+    likelihood_vm2 = resp(:,2) .* (params(2) * pdf(samples, target_hab, kappa));
+    likelihood_unif = resp(:,3) .* (weightUnif / (2*pi));
+    
+    likelihood_all = sum([likelihood_vm1 likelihood_vm2 likelihood_unif],2);
+    neg_log_likelihood = -sum(log(likelihood_all));
+end
+
+function neg_log_likelihood = calc_likelihood_unif_em(weight, samples, target_gd, resp)
+    
+    unifPDF = 1/pi;
+    idx = (target_gd >= 0) == (samples >= 0);
+    
+    likelihood = [idx ~idx] .* unifPDF;
+    likelihood(:,1) = resp(:,1) .* (weight .* likelihood(:,1));
+    likelihood(:,2) = resp(:,2) .* ((1-weight) .* likelihood(:,2));
     likelihood = sum(likelihood, 2);
     neg_log_likelihood = -sum(log(likelihood));
 end

@@ -116,6 +116,13 @@ for k = 1:Ngroup
 %                 end
 %                 idx = idx + 1;
             end
+%             
+%             log_likelihood = @(params) calc_likelihood2(params, samples);
+%             paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
+%             [params_opt, fval] = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 200 1]);
+%             mu = params_opt(1);
+%             kappa = params_opt(2);
+%             weight = params_opt(3);
             
             % store fitted parameter values
             mu_opt(j,k,m) = mu;
@@ -134,7 +141,7 @@ vmFit.kappa_opt = kappa_opt;
 vmFit.weight_opt = weight_opt;
 vmFit.sd = sd;
 
-save('variables/vmFit.mat','vmFit')
+% save('variables/vmFit.mat','vmFit')
 
 % points to assess the PDF
 delt = pi/64;
@@ -460,6 +467,19 @@ function neg_log_likelihood = calc_likelihood(params,samples,Pr_vm)
     
     likelihood_unif = (1 - Pr_vm) .* ((1 - weight) / (2*pi));
     likelihood_vm = Pr_vm .* (weight * exp(kappa * cos(samples-mu)) / (2 * pi * besseli(0,kappa)));
+    
+    likelihood_all = sum([likelihood_unif likelihood_vm],2);
+    neg_log_likelihood = -sum(log(likelihood_all));
+end
+
+% function for computing log-likelihod
+function neg_log_likelihood = calc_likelihood2(params,samples)
+    mu = params(1);
+    kappa = params(2);
+    weight = params(3);
+    
+    likelihood_unif = ones(size(samples)) .* ((1 - weight) / (2*pi));
+    likelihood_vm = weight * exp(kappa * cos(samples-mu)) / (2 * pi * besseli(0,kappa));
     
     likelihood_all = sum([likelihood_unif likelihood_vm],2);
     neg_log_likelihood = -sum(log(likelihood_all));
