@@ -13,7 +13,9 @@ groupNames = {'2-day','5-day','10-day'};
 Ngroup = length(groupNames);
 Nblock = length(titles);
 col = [198 156 109
-       0 146 69]./255; % colors for plotting
+       0 146 69
+       100 149 237
+       251 176 59]./255; % colors for plotting
 
 % generate plot
 figure(1); clf
@@ -48,54 +50,85 @@ end
 %% plot reaches from flip block
 
 % set variables for plotting
-subj = [1 1 3]; % select which participants to analyze from each group
-trialIdx = [474 467 1362 1356 2922 2920]; % select trials to plot
-axisLims = [0.4 0.7 0.15 0.45;
-            0.4 0.7 0.15 0.45
-            0.35 0.65 0.1 0.4;
-            0.45 0.75 0.05 0.35
-            0.43 0.73 0.1 0.4;
-            0.45 0.75 0.15 0.45]; % set axes for plots
+delay = 20; % time after movement initiation when velocity is computed
+trialIdx = [2922 467]; % select trials to plot
+axisLims = [0.43 0.73 0.1 0.4;
+            0.4 0.7 0.15 0.45]; % set axes for plots
 
 % generate plot
-figure(2); clf
-for j = 1:Ngroup % loop over groups
+f = figure(2); clf
+set(f,'Position',[200 200 350 200]);
+for i = 1:2 % loop to generate plot for toward or away trial
     
-    a = d.(groups{j}){subj(j)};
-    for i = 1:2 % loop to generate plot for toward or away trial
-        
-        % set variables
-        plotIdx = (j-1)*2 + i; % indices for plots
-        trial = trialIdx(plotIdx); % trial to be plotted
-        targ = a.targetAbs(trial-1:trial,:); % target trajectory
-        curs = a.C{trial}; % cursor trajectory
-        
-        % calculate direction of instantaneous velocity vector
-        init = a.init_x(trial)+20; % index of cursor position 150 ms after movement initiation
-        vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
-        vel = vel(init,:);
-        angle = atan2(vel(2),vel(1)); % find direction of velocity vector 
-        vector = 0.03*[cos(angle) sin(angle)]; % scale vector 
-        
-        subplot(2,3,(i-1)*3+j); hold on
-        plot([targ(1,1) targ(1,1)], [targ(1,2)-0.15 targ(1,2)+0.15], 'k--', 'LineWidth', 1) % mirror axis
-        plot(targ(1,1), targ(1,2), '.', 'Color', [0.6 0.6 0.6], 'MarkerSize', 35) % starting target
-        plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target
-        plot(targ(1,1) - (targ(2,1) - targ(1,1)), targ(2,2), 'o', 'Color', [1 0.4 0.4], 'MarkerSize', 10) % mirrored ending target
-        plot(curs(:,1), curs(:,2),'k','LineWidth',1) % cursor trajectory
-        plot([curs(init,1) curs(init,1)+vector(1)], [curs(init,2) curs(init,2)+vector(2)], 'Color', [0 0 1 0.5], 'LineWidth',4) % instantaneous velocity vector
-        axis(axisLims(plotIdx,:))
-        axis square
-        if i == 1
-            title(groupNames{j})
-            if j == 1
-                ylabel('Toward trial')
-            end
-        elseif i == 2 && j == 1
-            ylabel('Away trial')
-            plot([0.46 0.58],[0.2 0.2],'k','LineWidth',4)
-        end
+    if i == 1
+        a = d.day10{3};
+    else
+        a = d.day2{1};
+    end
+    
+    % set variables
+    trial = trialIdx(i); % trial to be plotted
+    targ = a.targetAbs(trial-1:trial,:); % target trajectory
+    curs = a.C{trial}; % cursor trajectory
+    
+    % calculate direction of instantaneous velocity vector
+    init = a.init_x(trial)+delay; % index of cursor position 150 ms after movement initiation
+    vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
+    vel = vel(init,:);
+    angle = atan2(vel(2),vel(1)); % find direction of velocity vector
+    vector = 0.03*[cos(angle) sin(angle)]; % scale vector
+    
+    subplot(1,2,i); hold on
+    plot([targ(1,1) targ(1,1)], [targ(1,2)-0.15 targ(1,2)+0.15], 'k--', 'LineWidth', 1) % mirror axis
+    plot([curs(init,1) curs(init,1)+vector(1)], [curs(init,2) curs(init,2)+vector(2)], 'Color', col(3,:), 'LineWidth',4) % instantaneous velocity vector
+    plot(targ(1,1), targ(1,2), '.', 'Color', [0.6 0.6 0.6], 'MarkerSize', 35) % starting target
+    plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target
+    plot(targ(1,1) - (targ(2,1) - targ(1,1)), targ(2,2), 'o', 'Color', [1 0.4 0.4], 'MarkerSize', 10) % mirrored ending target
+    plot(curs(:,1), curs(:,2),'k','LineWidth',1) % cursor trajectory
+    axis(axisLims(i,:))
+    axis square
+    xticks([])
+    yticks([])
+
+    if i == 2
+        plot([0.46 0.58],[0.2 0.2],'k','LineWidth',4)
     end
 end
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
+
+%%
+trial = 2896;
+
+a = d.day10{2};
+curs = a.C{trial}; % cursor trajectory
+
+vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
+
+init = a.init(trial) + delay;
+initVel = vel(init,:);
+angle = atan2(initVel(2),initVel(1)); % find direction of velocity vector
+vector = 0.03*[cos(angle) sin(angle)]; % scale vector
+
+init_x = a.init_x(trial) + delay;
+initVel_x = vel(init_x,:);
+angle = atan2(initVel_x(2),initVel_x(1)); % find direction of velocity vector
+vector_x = 0.03*[cos(angle) sin(angle)]; % scale vector
+
+targ = a.targetAbs(trial-1:trial,:); % target trajectory
+
+f = figure(3); clf; hold on
+set(f,'Position',[200 200 100 100]);
+plot([targ(1,1) targ(1,1)], [targ(1,2)-0.15 targ(1,2)+0.15], 'k--', 'LineWidth', 1) % mirror axis
+plot([curs(init,1) curs(init,1)+vector(1)], [curs(init,2) curs(init,2)+vector(2)], 'Color', col(3,:), 'LineWidth',4) % instantaneous velocity vector
+plot([curs(init_x,1) curs(init_x,1)+vector_x(1)], [curs(init_x,2) curs(init_x,2)+vector_x(2)], 'Color', col(4,:), 'LineWidth',4) % instantaneous horizontal velocity
+plot(targ(1,1), targ(1,2), '.', 'Color', [0.6 0.6 0.6], 'MarkerSize', 35) % starting target
+plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target    
+plot(a.C{trial}(:,1),a.C{trial}(:,2),'k') % plot cursor
+axis([0.55 0.7 0.2 0.35])
+axis square
+xticks([])
+yticks([])
+
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit2','-dpdf','-painters')
+
 end

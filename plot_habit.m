@@ -52,24 +52,23 @@ col = [180 180 0
 
 rng(34);
 ax = {'x','y'};
-xAxis = [0.5 2.5 5 15
-         1 3 8 15.5
-         1.5 3.5 13 16];
-figure(1); clf
+f = figure(1); clf
+set(f,'Position',[200 200 270 150]);
+
 for j = 1:2
     for i = 1:Ngroup
         subplot(1,2,j); hold on
         n = Nsubj(i);
-        plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), habit.(ax{j}).(groups{i}), '.', 'MarkerSize', 20, 'Color', col(i,:))
-        plot(xAxis(i,:), mean(habit.(ax{j}).(groups{i}),1), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
+        plot(repmat((i-1) + [1 5],[n 1]) + 0.5*(rand(n,2) - 0.5), habit.(ax{j}).(groups{i})(:,3:4), '.', 'MarkerSize', 12, 'Color', col(i,:))
+        plot((i-1) + [1 5], mean(habit.(ax{j}).(groups{i})(:,3:4),1), 'ko', 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
         if i == 1
-            xticks([1 3 5 8 13 15.5])
-            xticklabels({'Baseline',1,2,5,10,'Flip'})
-            xlabel('Day')
+            xticks([2 6])
+            xticklabels({'Late','Flip'})
+            xlabel('Block')
             set(gca,'TickDir','out')
-            axis([0 16.5 0 60])
+            axis([0 8 0 60])
             if j == 1
-                ylabel('Proportion of incorrect reaches')
+                ylabel('Aimed away (%)')
                 title('Left hand')
             else
                 title('Right hand')
@@ -78,7 +77,7 @@ for j = 1:2
     end
 end
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/habit','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/away','-dpdf','-painters')
 %% plot proportion of incorrect reaches binned by distance from mirroring axis
 
 for m = 1:4 % loop over target direction bins

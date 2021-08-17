@@ -47,9 +47,12 @@ disp('All Done')
 
 %% plot data
 
-plot_traj(d);
-plot_kinematics(d);
-plot_habit(d);
-plot_direction(d);
-
+plot_traj(d)
+plot_kinematics(d)
+plot_habit(d)
+plot_direction(d)
 plot_habitMLE(d)
+modelRecovery
+paramRecovery
+likelihood
+plot_reachDirection(d)

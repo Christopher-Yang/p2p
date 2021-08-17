@@ -1,3 +1,5 @@
+function likelihood()
+
 rng(2);
 
 % generate targets
@@ -92,6 +94,7 @@ title(['Actual: w_1 = ' num2str(w1) '; w_2 = ' num2str(w2) '; \kappa = ' ...
 xlabel('weight (GD)')
 ylabel('weight (hab)')
 zlabel('kappa')
+end
 
 function log_likelihood = calc_likelihood(weight1, weight2, kappa, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution

@@ -108,7 +108,7 @@ for i=1:data.Ntrials
         data.lag(i) = NaN;
     end
     
-    data.RT(i) = data.time{i}(data.init(i))-data.time{i}(data.go(i)); % reaction time
+    data.RT(i) = data.time{i}(data.init(i))-data.time{i}(data.go(i)) - 100; % reaction time
     data.movtime(i) = data.time{i}(data.end(i))-data.time{i}(data.init(i)); % movement time
     
     % compute path length

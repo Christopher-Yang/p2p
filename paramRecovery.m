@@ -1,15 +1,16 @@
+function paramRecovery()
 
 rng(2);
-vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa)));
-unifPDF = 1 / 2*pi;
 
 weight1 = 0:0.1:1;
 weight2 = 0:0.1:1;
-kappa = 1:10;
+kappa = 1:6;
+
+% generate targets
+Ntrials = 100;
 
 mu1 = pi/4;
 mu2 = atan2(sin(mu1), -cos(mu1));
-Nreps = 1;
 
 clear corr_weight1 corr_weight2
 weight1_opt = NaN(length(weight1), length(weight2), length(kappa));
@@ -28,25 +29,33 @@ for k = 1:length(kappa)
         for j = 1:length(weight2)-i+1
             w1 = weight1(i);
             w2 = weight2(j);
-            w3 = 1 - (w1 + w2);
             
-            if w1 ~= 0
-                data1 = vmrand(mu1,kap,[round(w1*100) 1]);
-            else
+            targ_gd = 2 * pi * (rand(Ntrials,1)-0.5);
+            targ_dir = [cos(targ_gd) sin(targ_gd)];
+            targ_dir(:,1) = -targ_dir(:,1);
+            targ_hab = atan2(targ_dir(:,2), targ_dir(:,1));
+            
+            % generate data from mixture model
+            idx1 = round(w1*100);
+            idx2 = round(w2*100);
+            
+            if idx1 == 0
                 data1 = [];
+            else
+                data1 = vmrand(targ_gd(1:idx1), kap);
             end
             
-            if w2 ~= 0
-                data2 = vmrand(mu2,kap,[round(w2*100) 1]);
-            else
+            if idx2 == 0
                 data2 = [];
+            else
+                data2 = vmrand(targ_hab(idx1+1:idx1+idx2), kap);
             end
             
             data_sim = [data1; data2];
-            data3 = 2*pi*(rand(100-length(data_sim), 1) - 0.5);
+            data3 = 2*pi*(rand(Ntrials-length(data_sim), 1) - 0.5);
             data_sim = [data_sim; data3];
             
-            log_likelihood = @(params) calc_likelihood(params, data_sim, mu1, mu2);            
+            log_likelihood = @(params) calc_likelihood(params, data_sim, targ_gd, targ_hab);            
             [params_opt, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, A, b);
             
             weight1_opt(i,j,k) = params_opt(1);
@@ -84,8 +93,17 @@ kappa_opt_vec = kappa_opt(~isnan(kappa_opt));
 c3 = corrcoef(kappa_vec,kappa_opt_vec);
 corr_kappa = c3(1,2);
 
+figure(2); clf
+subplot(1,2,1); hold on
+plot(kappa, corr_weight1)
+ylim([0 1])
+
+subplot(1,2,2); hold on
+plot(kappa, corr_weight2)
+ylim([0 1])
+
 %%
-k = 3;
+k = 8;
 
 figure(1); clf
 subplot(1,3,1); hold on
@@ -119,6 +137,8 @@ ylim([0 30])
 axis square
 xlabel('kappa (actual)')
 ylabel('kappa (fit)')
+
+end
 
 function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
