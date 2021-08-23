@@ -125,21 +125,23 @@ writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')
 subj = 1; % choose which subject to plot fits for
 Nblock = 3;
 
-figure(2); clf
+figure(1); clf
 for j = 1:Nblock
     for k = 1:Ngroup
         subplot(3, 3, (j-1)*3 + k); hold on
         Nsubj = size(dirError{k},2);
         
+        idx = gblocks{k}(j);
+        
         % plot histograms
         if subj <= Nsubj
-            trial = trials{gblocks{k}(j)};
+            trial = trials{idx};
             histogram(dirError{k}(trial,subj),x*180/pi,'Normalization','probability');
         end
         
         % plot pdf
-        pdf = vmPDF(x, mu_opt(j,k,subj), kappa_opt(j,k,subj)); % PDF of von Mises distribution
-        mixPDF = weight_opt(j,k,subj) * pdf + (1-weight_opt(j,k,subj)) * (1 / (2*pi)); % weight von Mises with uniform distribution
+        pdf = vmPDF(x, mu_opt(idx,k,subj), kappa_opt(idx,k,subj)); % PDF of von Mises distribution
+        mixPDF = weight_opt(idx,k,subj) * pdf + (1-weight_opt(idx,k,subj)) * (1 / (2*pi)); % weight von Mises with uniform distribution
         plot(x*180/pi, mixPDF./sum(mixPDF), 'LineWidth', 2)
         if j == 1
             title(graph_names{k})
@@ -152,18 +154,41 @@ for j = 1:Nblock
     end
 end
 
+%%
+subj = 1;
+block = 28;
+group = 3;
+trial = trials{block};
+delt = pi/16;
+x = -pi:delt:pi-delt;
+
+f = figure(2); clf
+set(f,'Position',[200 200 170 120]);
+polarhistogram(dirError{group}(trial,subj)*pi/180,x,'FaceColor','black','FaceAlpha',.3,'Normalization','pdf'); hold on
+
+delt = pi/64;
+x = -pi:delt:pi-delt;
+pdf = vmPDF(x, mu_opt(block,group,subj), kappa_opt(block,group,subj)); % PDF of von Mises distribution
+mixPDF = weight_opt(block,group,subj) * pdf + (1-weight_opt(block,group,subj)) * (1 / (2*pi)); % weight von Mises with uniform distribution
+polarplot(x,mixPDF,'Color',[1 0 0 0.7],'LineWidth',1)
+thetaticks(0:90:270)
+rticks(1:2)
+
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/polar','-dpdf','-painters')
+
 %% plot standard deviation of von Mises distribution (x-axis unscaled by practice time)
 
 order = [3 2 1];
 Nday = [2 5 10];
 
-figure(3); clf; hold on
+f = figure(3); clf
+set(f,'Position',[200 200 150 150]);
 for i = 1:Ngroup
     o = order(i);
     for j = 1:Nday(o)
         if j == 1
-            s = shadedErrorBar(0:1, [sd_mu(1,o) sd_mu(1,o)]*180/pi, [sd_se(1,o) sd_se(1,o)]*180/pi);
-            editErrorBar(s,col(o,:),2);
+            s = shadedErrorBar([-1 1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, [sd_se(1,o) sd_se(1,o)]*180/pi);
+            editErrorBar(s,col(o,:),0.5);
 %             errorbar(1,sd_mu(1,o)*180/pi, sd_se(1,o)*180/pi, '.', 'Color', col2(o,:), 'MarkerSize', 20)
             
             idx = 2:3;
@@ -174,22 +199,22 @@ for i = 1:Ngroup
         end
         
         s = shadedErrorBar(idx, sd_mu(idx,o)*180/pi, sd_se(idx,o)*180/pi);
-        editErrorBar(s,col(o,:),2);
+        editErrorBar(s,col(o,:),0.5);
         
-        if o == 3 && j > 1
-            plot([idx(1)-0.5 idx(1)-0.5], [0 60], 'k')
-        end
+%         if o == 3 && j > 1
+%             plot([idx(1)-0.5 idx(1)-0.5], [0 60], 'k')
+%         end
     end
 end
 set(gca,'TickDir','out')
-xticks([0.5 5 14 29])
-xticklabels({'Baseline',5,14,29})
-xlabel('Blocks (point-to-point)')
-ylabel('St dev of von Mises distribution')
+xticks([0 4 13 28])
+xticklabels({'Baseline',2,5,10})
+xlabel('Day')
+ylabel('Circular st dev')
 xlim([-1 30])
 yticks(0:15:60)
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/stdev','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
 
 %% plot kernel-smoothed PDF
 figure(4); clf

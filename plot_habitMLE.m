@@ -337,21 +337,6 @@ set(gca,'TickDir','out')
 % writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitMLE.csv')
 
 %%
-
-figure(5); clf; hold on
-for i = 1:3
-    n = allSubj(i);
-    plot(repmat(xAxis(i,:),[n 1]) + 0.5*(rand(n,4) - 0.5), weight2_frac{i}, '.', 'MarkerSize', 20, 'Color', col2(i,:), 'HandleVisibility', 'off')
-    plot(xAxis(i,:), mean(weight2_frac{i}), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', col2(i,:), 'LineWidth', 1)
-end
-xticks([1 3 5 8 13 15.5])
-xticklabels({'Baseline',1,2,5,10,'Flip'})
-xlabel('Day')
-axis([0 16.5 0 0.8])
-ylabel('P(habitual) / [P(habitual) + P(GD)]')
-set(gca,'TickDir','out')
-
-%%
 idx = [5 45];
 
 dat = [];
@@ -405,21 +390,21 @@ end
 % dlmwrite('C:/Users/Chris/Documents/R/habit/data/RT.csv', z)
 
 f = figure(7); clf
-set(f,'Position',[200 200 350 120]);
+set(f,'Position',[200 200 300 130]);
 subplot(1,2,1); hold on
 for j = 1:Ngroup
-    plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), vel_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
-    plot(j, mean(vel_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1, 'HandleVisibility', 'off')
+    plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), RT_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
+    plot(j, mean(RT_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1, 'HandleVisibility', 'off')
     
-    plot(j + 4 + 0.5 * (rand(allSubj(j),1) - 0.5), vel_hab{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
-    plot(j + 4, mean(vel_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1)
+    plot(j + 4 + 0.5 * (rand(allSubj(j),1) - 0.5), RT_hab{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
+    plot(j + 4, mean(RT_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1)
 end
 xticks([2 6])
 xticklabels({'Actual', 'Mirrored'})
 xlim([0.5 7.5])
-yticks(0:0.2:0.4)
-ylim([0 0.4])
-ylabel('Initial reach velocity (m/s)')
+yticks(300:300:900)
+ylim([200 1000])
+ylabel('Reaction time (ms)')
 set(gca,'Tickdir','out')
 
 % subplot(1,3,2); hold on
@@ -439,18 +424,18 @@ set(gca,'Tickdir','out')
 
 subplot(1,2,2); hold on
 for j = 1:Ngroup
-    plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), RT_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
-    plot(j, mean(RT_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1, 'HandleVisibility', 'off')
+    plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), vel_gd{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
+    plot(j, mean(vel_gd{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1, 'HandleVisibility', 'off')
     
-    plot(j + 4 + 0.5 * (rand(allSubj(j),1) - 0.5), RT_hab{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
-    plot(j + 4, mean(RT_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1)
+    plot(j + 4 + 0.5 * (rand(allSubj(j),1) - 0.5), vel_hab{j}, '.', 'Color', col2(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
+    plot(j + 4, mean(vel_hab{j}), 'ko', 'MarkerFaceColor', col2(j,:), 'MarkerSize', 6, 'LineWidth', 1)
 end
 xticks([2 6])
 xticklabels({'Actual', 'Mirrored'})
 xlim([0.5 7.5])
-yticks(300:300:900)
-ylim([200 1000])
-ylabel('Reaction time (ms)')
+yticks(0:0.2:0.4)
+ylim([0 0.4])
+ylabel('Initial reach velocity (m/s)')
 set(gca,'Tickdir','out')
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habit_kinematics','-dpdf','-painters')
@@ -459,7 +444,6 @@ end
 
 function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
-%     pdf = @(x, mu, sigma) (1/(sigma*sqrt(2*pi)) * exp(-0.5 * ((x - mu)/sigma).^2));
     
     kappa = params(3);
     weightUnif = 1 - sum(params(1:2));

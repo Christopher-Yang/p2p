@@ -13,7 +13,7 @@ Nsims = 50;
 % generate data from mixture model
 w1 = 0:0.1:1;
 w2 = 0:0.1:1;
-kappa = 1:3;
+kappa = 3;
 
 accuracy = NaN(length(w1),length(w2),length(kappa));
 
@@ -97,17 +97,42 @@ for m = 1:length(w1)
     end
 end
 
+%%
+
+load accuracy
+
 x = repmat(w1',[1 length(w2) length(kappa)]);
 x = x(:);
 y = repmat(w2,[length(w1) 1 length(kappa)]);
 y = y(:);
-z = repmat(permute(kappa, [1 3 2]),[length(w1) length(w2) 1]);
-z = z(:);
+% z = repmat(permute(kappa, [1 3 2]),[length(w1) length(w2) 1]);
+% z = z(:);
 
-figure(1); clf
-scatter3(x,y,z,40,accuracy(:),'filled'); hold on
-colormap(parula);
-colorbar
+col = [accuracy(:) zeros(length(x), 2)];
+
+f = figure(1); clf
+set(f,'Position',[200 200 200 150]);
+% scatter(x,y,30,col,'filled')
+scatter(x,y,13,accuracy(:),'filled')
+colormap(copper)
+c = colorbar;
+c.Ticks = [0.5 1];
+xlabel('Goal-directed component weight')
+xticks(0:0.5:1)
+ylabel('Habitual component weight')
+yticks(0:0.5:1)
+axis([0 1 0 1])
+axis square
+set(gca,'TickDir','out')
+
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/model_recovery','-dpdf','-painters')
+
+% imagesc(accuracy)
+% 
+% figure(1); clf
+% scatter3(x,y,z,40,accuracy(:),'filled'); hold on
+% colormap(parula);
+% colorbar
 
 end
 

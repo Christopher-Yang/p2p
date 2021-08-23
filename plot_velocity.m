@@ -1,3 +1,5 @@
+function plot_velocity(d)
+
 %% align velocity to target presentation
 
 clear vel 
@@ -80,27 +82,46 @@ end
 
 %%
 figure(2); clf
-for i = 1:3
-    xAxis = 0:delt:size(vel{i},1)*delt - delt;
+for i = 1:Ngroup % loop over groups
     
-    subplot(2,3,i); hold on % plot baseline
-    v = reshape(vel{i}(:,1:30,:),[length(xAxis) 30*Nsubj(i)]);
-    plot(xAxis,v,'Color',[0 0 0 0.02])
-    plot(xAxis,nanmean(nanmean(vel{i}(:,1:30,:),2),3),'r','LineWidth',2)
-    axis([0 2 0 0.6])
+    xAxis = 0:delt:size(vel{i},1)*delt - delt; % times at which data were collected
+    Nblock = length(gblocks{i}); % number of blocks to plot for each group
+    
+    % set colors to plot lines
+    col1 = [255 0 0]./255;
+    col2 = [255 215 0]./255;
+    col = [linspace(col1(1),col2(1),Nblock-1)', linspace(col1(2),col2(2),Nblock-1)', linspace(col1(3),col2(3),Nblock-1)'];
+    
+    subplot(1,3,i); hold on
+    
+%     % plot all data except baseline and last day of learning
+%     for j = 2:Nblock-1
+%         v = nanmean(vel{i}(:,trials{j},:),2)*100;
+%         s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+%         editErrorBar(s,col(j-1,:),2);
+%     end
+    
+    % plot baseline
+    v = nanmean(vel{i}(:,1:30,:),2)*100;
+    s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+    editErrorBar(s,[0 0 0],2);
+    
+    % plot early learning
+    v = nanmean(vel{i}(:,31:130,:),2)*100;
+    s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+    editErrorBar(s,col(1,:),2);
+    
+    % plot last day of learning
+    v = nanmean(vel{i}(:,end-99:end,:),2)*100;
+    s = shadedErrorBar(xAxis,nanmean(v,3),nanstd(v,[],3)/sqrt(Nsubj(i)));
+    editErrorBar(s,col(end,:),2);
+    
+    axis([0 2 0 40])
+    yticks(0:10:40)
     title(graph_names{i})
+    xlabel('Time from target onset (s)')
     if i == 1
-        ylabel('Velocity')
-    end
-    
-    subplot(2,3,i+3); hold on % plot late learning
-    v = reshape(vel{i}(:,131:230,:),[length(xAxis) 100*Nsubj(i)]);
-    plot(xAxis,v,'Color',[0 0 0 0.02])
-    plot(xAxis,nanmean(nanmean(vel{i}(:,131:230,:),2),3),'r','LineWidth',2)
-    axis([0 2 0 0.6])
-    xlabel('Time (s)')
-    if i == 1
-        ylabel('Velocity')
+        ylabel('Tangential velocity (cm/s)')
     end
 end
 
@@ -148,4 +169,6 @@ for i = 1:Ngroup
     plot(nanmean(nanmean(vel{i}(:,31:130,:),2),3))
     plot(nanmean(nanmean(vel{i}(:,trials{gblock(i)},:),2),3))
     ylim([0 0.5])
+end
+
 end

@@ -49,12 +49,15 @@ for i=1:data.Ntrials
         threshold_y = abs(data.C{i}(:,2)-data.targetAbs(i-1,2)) > 0.01;
     end
     
+    threshold_x(1:data.init(i)) = 0;
+    threshold_y(1:data.init(i)) = 0;
+    
     if sum(threshold_y) == 0
         data.init_y(i) = NaN;
         data.initVel_y(i) = NaN;
         data.incorrectReach_y(i) = NaN;
     else
-        data.init_y(i) = min(find(threshold_y==1));
+        data.init_y(i) = find(threshold_y==1,1,'first');
         if data.init_y(i)+delay > size(vel_C,1)
             data.init_y(i) = NaN;
             data.initVel_y(i) = NaN;
@@ -79,7 +82,7 @@ for i=1:data.Ntrials
         data.initVel_x(i) = NaN;
         data.incorrectReach_x(i) = NaN;
     else
-        data.init_x(i) = min(find(threshold_x==1));
+        data.init_x(i) = find(threshold_x==1,1,'first');
         if data.init_x(i)+delay > size(vel_C,1)
             data.init_x(i) = NaN;
             data.initVel_x(i) = NaN;
@@ -109,6 +112,27 @@ for i=1:data.Ntrials
     end
     
     data.RT(i) = data.time{i}(data.init(i))-data.time{i}(data.go(i)) - 100; % reaction time
+    if isnan(data.init_x(i))
+        data.RT_x(i) = NaN;
+    else
+        RT_x = data.time{i}(data.init_x(i))-data.time{i}(data.go(i)) - 100; % reaction time
+        if RT_x < 0
+            data.RT_x(i) = NaN;
+        else
+            data.RT_x(i) = RT_x;
+        end
+    end
+    if isnan(data.init_y(i))
+        data.RT_y(i) = NaN;
+    else
+        RT_y = data.time{i}(data.init_y(i))-data.time{i}(data.go(i)) - 100; % reaction time
+        if RT_y < 0
+            data.RT_y(i) = NaN;
+        else
+            data.RT_y(i) = RT_y;
+        end
+    end
+        
     data.movtime(i) = data.time{i}(data.end(i))-data.time{i}(data.init(i)); % movement time
     
     % compute path length

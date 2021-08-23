@@ -4,13 +4,12 @@ rng(2);
 
 weight1 = 0:0.1:1;
 weight2 = 0:0.1:1;
-kappa = 1:6;
+kappa = 2:2:10;
+R = besseli(1,kappa) ./ besseli(0,kappa);
+sd = sqrt(-2 * log(R)) * 180/pi;
 
 % generate targets
 Ntrials = 100;
-
-mu1 = pi/4;
-mu2 = atan2(sin(mu1), -cos(mu1));
 
 clear corr_weight1 corr_weight2
 weight1_opt = NaN(length(weight1), length(weight2), length(kappa));
@@ -67,10 +66,10 @@ for k = 1:length(kappa)
 
     idx = ~isnan(weight1_opt(:,:,k));
     
-    weight1_vec = repmat(weight1',[1 length(weight2)]);
-    weight2_vec = repmat(weight2,[length(weight1) 1]);
-    weight1_vec = weight1_vec(idx);
-    weight2_vec = weight2_vec(idx);
+    weight1_mat = repmat(weight1',[1 length(weight2)]);
+    weight2_mat = repmat(weight2,[length(weight1) 1]);
+    weight1_vec = weight1_mat(idx);
+    weight2_vec = weight2_mat(idx);
     
     weight1_opt_vec = weight1_opt(:,:,k);
     weight2_opt_vec = weight2_opt(:,:,k);
@@ -103,13 +102,21 @@ plot(kappa, corr_weight2)
 ylim([0 1])
 
 %%
-k = 8;
+k = 2;
+
+R = besseli(1,kappa_opt) ./ besseli(0,kappa_opt);
+sd_opt = sqrt(-2 * log(R)) * 180/pi;
+
+weights = weight1_mat + weight2_mat;
+idx = (weights <= 1) == (weights >= 0.8);
 
 figure(1); clf
 subplot(1,3,1); hold on
 plot([0 1], [0 1], 'k')
-plot(weight1, weight1_opt(:,:,k), '.k', 'MarkerSize', 10)
-plot(weight1, nanmean(weight1_opt(:,:,k)'), '.r', 'MarkerSize', 30)
+for i = 1:length(weight1)
+    plot(weight1(i), weight1_opt(i,:,k), '.k', 'MarkerSize', 10)
+    plot(weight1(i), mean(weight1_opt(i,:,k),'omitnan'), '.r', 'MarkerSize', 30)
+end
 title(['\kappa = ' num2str(kappa(k))])
 axis([0 1 0 1])
 axis square
@@ -118,8 +125,10 @@ ylabel('weight1 (fit)')
 
 subplot(1,3,2); hold on
 plot([0 1], [0 1], 'k')
-plot(weight2, weight2_opt(:,:,k)', '.k', 'MarkerSize', 10)
-plot(weight2, nanmean(weight2_opt(:,:,k)), '.r', 'MarkerSize', 30)
+for i = 1:length(weight2)
+    plot(weight2(i), weight2_opt(:,i,k), '.k', 'MarkerSize', 10)
+    plot(weight2(i), mean(weight2_opt(:,i,k),'omitnan'), '.r', 'MarkerSize', 30)
+end
 title(['\kappa = ' num2str(kappa(k))])
 axis([0 1 0 1])
 axis square
@@ -130,13 +139,14 @@ subplot(1,3,3); hold on
 plot([0 max(kappa)], [0 max(kappa)], 'k')
 for i = 1:length(kappa)
     dat = kappa_opt(:,:,i);
-    plot(repmat(kappa(i), size(dat)), dat, '.k', 'MarkerSize', 10)
+    dat = dat(idx);
+    plot(kappa(i), dat(:), '.k', 'MarkerSize', 10)
     plot(kappa(i), nanmean(dat(:)), '.r', 'MarkerSize', 30)
 end
-ylim([0 30])
+% ylim([0 30])
 axis square
-xlabel('kappa (actual)')
-ylabel('kappa (fit)')
+xlabel('sd (actual)')
+ylabel('sd (fit)')
 
 end
 

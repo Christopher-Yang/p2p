@@ -16,16 +16,26 @@ col = [180 180 0
 for i = 1:Ngroups
     RT_away{i} = [];
     RT_toward{i} = [];
-    
+    RTX_away{i} = [];
+    RTX_toward{i} = [];
+    RTY_away{i} = [];
+    RTY_toward{i} = [];
     vel_away{i} = [];
     vel_toward{i} = [];
+    velX_away{i} = [];
+    velX_toward{i} = [];
+    velY_away{i} = [];
+    velY_toward{i} = [];
     
     for j = 1:Nsubj(i)
         a = d.(groups{i}){j};
         pLength{i}(:,j) = a.pathlength;
         movtime{i}(:,j) = a.movtime./1000;
         RT{i}(:,j) = a.RT;
+        RTX{i}(:,j) = a.RT_x;
+        RTY{i}(:,j) = a.RT_y;
         vel{i}(:,j) = a.initVel_filt;
+        pkVel{i}(:,j) = a.pkVel;
         velX{i}(:,j) = abs(a.initVel_x);
         velY{i}(:,j) = abs(a.initVel_y);
         
@@ -34,12 +44,18 @@ for i = 1:Ngroups
         towardIdx = a.incorrectReach_x(end-99:end) == 0;
 
         last_RT = RT{i}(habitBlocks(i,:),j);
+        last_RTX = RTX{i}(habitBlocks(i,:),j);
+        last_RTY = RTY{i}(habitBlocks(i,:),j);
         last_vel = vel{i}(habitBlocks(i,:),j);
         last_velX = velX{i}(habitBlocks(i,:),j);
         last_velY = velY{i}(habitBlocks(i,:),j);
         
         RT_away{i}(j) = mean(last_RT(awayIdx));
         RT_toward{i}(j) = mean(last_RT(towardIdx));
+        RTX_away{i}(j) = nanmean(last_RTX(awayIdx));
+        RTX_toward{i}(j) = nanmean(last_RTX(towardIdx));
+        RTY_away{i}(j) = nanmean(last_RTY(awayIdx));
+        RTY_toward{i}(j) = nanmean(last_RTY(towardIdx));
         vel_away{i}(j) = nanmean(last_vel(awayIdx));
         vel_toward{i}(j) = nanmean(last_vel(towardIdx));
         velX_away{i}(j) = nanmean(last_velX(awayIdx));
@@ -55,6 +71,7 @@ for i = 1:Ngroups
         movtimeBin{i}(j,:) = mean(movtime{i}((j-1)*5+1:(j-1)*5+5,:),1);
         RTBin{i}(j,:) = mean(RT{i}((j-1)*5+1:(j-1)*5+5,:),1);
         velBin{i}(j,:) = nanmean(vel{i}((j-1)*5+1:(j-1)*5+5,:),1);
+        pkVelBin{i}(j,:) = nanmean(pkVel{i}((j-1)*5+1:(j-1)*5+5,:),1);
     end
     
     pLength_mu{i} = mean(pLengthBin{i},2);
@@ -65,16 +82,20 @@ for i = 1:Ngroups
     RT_se{i} = std(RTBin{i},[],2)/sqrt(Nsubj(i));
     vel_mu{i} = nanmean(velBin{i},2);
     vel_se{i} = nanstd(velBin{i},[],2)./sqrt(sum(~isnan(velBin{i}),2));
+    pkVel_mu{i} = nanmean(pkVelBin{i},2);
+    pkVel_se{i} = nanstd(pkVelBin{i},[],2)./sqrt(sum(~isnan(pkVelBin{i}),2));
 end
 
-%% plot path length, movement time, and reaction time across trials
+%% plot path length
 
 % set variables for plotting
 gblock = [3 2 1]; % set order in which to plot groups (10-day, 5-day, then 2-day)
 trialIdx = [5 14 29]; % select which trials to plot from variable "trials"
 lw = 0.25; % line width for plots
-dayStart = [7 47:60:527]; % xticks
-dayStartLabels = [31 231:300:2930]; % xticklabels
+% dayStart = [7 47:60:527]; % xticks
+% dayStartLabels = [31 231:300:2930]; % xticklabels
+dayStart = [7 47 227 527];
+dayStartLabels = {'1','2','5','10'};
 
 % x-axis for binned trials
 trials{1} = 1:6;
@@ -82,32 +103,25 @@ for i = 1:29
     trials{i+1} = (i-1)*20 + 7:(i-1)*20 + 26;
 end
 
-% plot path length
-figure(1); clf
+f = figure(1); clf
+set(f,'Position',[200 200 170 120]);
 
 % plot baseline data
-subplot(1,5,1); hold on
+subplot(1,8,1:2); hold on
 for j = 1:3
     s = shadedErrorBar(trials{1}, pLength_mu{gblock(j)}(trials{1})*100, pLength_se{gblock(j)}(trials{1})*100);
     editErrorBar(s,col(gblock(j),:),lw);
 end
-xlabel('Trial number')
 ylabel('Path length (cm)')
-xticks([1 6])
-xticklabels([1 30])
-yticks(0:20:100)
-axis([1 6 0 80])
-title('Baseline')
+xticks(1)
+xticklabels('Baseline')
+yticks(10:10:40)
+axis([1 6 10 40])
 set(gca,'TickDir','out')
 
-% plot average of baseline data
-subplot(1,5,2:5); hold on
-for i = 1:3
-    avg = mean(pLength_mu{i}(1:6))*100;
-    plot([trials{trialIdx(i)-1}(1) trials{trialIdx(i)}(end)],[avg avg],'Color',col(i,:),'LineWidth',4)
-end
-
 % plot data from days 1-2
+subplot(1,8,3:8); hold on
+
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},pLength_mu{gblock(j)}(trials{i})*100, pLength_se{gblock(j)}(trials{i})*100);
@@ -131,40 +145,43 @@ end
 xlabel('Trial Number')
 xticks(dayStart)
 xticklabels(dayStartLabels)
-yticks(0:20:100)
-axis([7 566 0 80])
-title('Training')
-legend({'2-day','5-day','10-day'})
+yticks(10:10:40)
+axis([7 566 10 40])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/pLength','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
-% plot movement time data
-figure(2); clf
+y = [mean(pLength{1}(1:30,:))'; mean(pLength{2}(1:30,:))'; mean(pLength{3}(1:30,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "baseline";
+blockNames(33:64,1) = "late";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
+
+%% plot movement time
+f = figure(2); clf
+set(f,'Position',[200 200 170 120]);
 
 % plot baseline data
-subplot(1,5,1); hold on
+subplot(1,8,1:2); hold on
 for j = 1:3
     s = shadedErrorBar(trials{1},movtime_mu{gblock(j)}(trials{1}), movtime_se{gblock(j)}(trials{1}));
     editErrorBar(s,col(gblock(j),:),lw);
 end
-xticks([1 6])
-xticklabels([1 30])
+xticks(1)
+xticklabels([])
 yticks(0:2:8)
-axis([1 6 0 8])
-xlabel('Trial number')
+axis([1 6 0 6])
 ylabel('Movement time (s)')
-title('Baseline')
 set(gca,'TickDir','out')
 
-% plot average of baseline data
-subplot(1,5,2:5); hold on
-for i = 1:3
-    avg = mean(movtime_mu{i}(1:6));
-    plot([trials{trialIdx(i)-1}(1) trials{trialIdx(i)}(end)],[avg avg],'Color',col(i,:),'LineWidth',4)
-end
-
 % plot data from days 1-2
+subplot(1,8,3:8); hold on
+
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},movtime_mu{gblock(j)}(trials{i}), movtime_se{gblock(j)}(trials{i}));
@@ -189,39 +206,41 @@ xlabel('Trial Number')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(0:2:8)
-axis([7 566 0 8])
-legend({'2-day','5-day','10-day'})
-title('Training')
+axis([7 566 0 6])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/movtime','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
-% plot reaction time data
-figure(3); clf
+y = [mean(movtime{1}(1:30,:))'; mean(movtime{2}(1:30,:))'; mean(movtime{3}(1:30,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "baseline";
+blockNames(33:64,1) = "late";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
+
+%% plot reaction time
+f = figure(3); clf
+set(f,'Position',[200 200 170 120]);
 
 % plot baseline data
-subplot(1,5,1); hold on
+subplot(1,8,1:2); hold on
 for j = 1:3
     s = shadedErrorBar(trials{1},RT_mu{gblock(j)}(trials{1}), RT_se{gblock(j)}(trials{1}));
     editErrorBar(s,col(gblock(j),:),lw);
 end
-xticks([1 6])
-xticklabels([1 30])
+xticks(1)
+xticklabels([])
 yticks(300:400:1700)
-axis([1 6 300 1700])
-xlabel('Trial number')
+axis([1 6 300 1100])
 ylabel('Reaction time (ms)')
-title('Baseline')
 set(gca,'TickDir','out')
 
-% plot average of baseline data
-subplot(1,5,2:5); hold on
-for i = 1:3
-    avg = mean(RT_mu{i}(1:6));
-    plot([trials{trialIdx(i)-1}(1) trials{trialIdx(i)}(end)],[avg avg],'Color',col(i,:),'LineWidth',4)
-end
-
 % plot data from days 1-2
+subplot(1,8,3:8); hold on
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},RT_mu{gblock(j)}(trials{i}), RT_se{gblock(j)}(trials{i}));
@@ -247,42 +266,45 @@ xlabel('Trial Number')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(300:400:1700)
-axis([7 566 300 1700])
-legend({'2-day','5-day','10-day'})
-title('Training')
+axis([7 566 300 1100])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/RT','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
-% plot initial reach velocity data
-figure(4); clf
+y = [mean(RT{1}(1:30,:))'; mean(RT{2}(1:30,:))'; mean(RT{3}(1:30,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "baseline";
+blockNames(33:64,1) = "late";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+
+%% plot peak reach velocity
+f = figure(4); clf
+set(f,'Position',[200 200 170 120]);
 
 % plot baseline data
-subplot(1,5,1); hold on
+subplot(1,8,1:2); hold on
 for j = 1:3
-    s = shadedErrorBar(trials{1},vel_mu{gblock(j)}(trials{1}), vel_se{gblock(j)}(trials{1}));
+    s = shadedErrorBar(trials{1},pkVel_mu{gblock(j)}(trials{1}), pkVel_se{gblock(j)}(trials{1}));
     editErrorBar(s,col(gblock(j),:),lw);
 end
-xticks([1 6])
-xticklabels([1 30])
-% yticks(400:400:1800)
-axis([1 6 0 0.4])
-xlabel('Trial number')
-ylabel('Initial velocity (m/s)')
-title('Baseline')
+xticks(1)
+xticklabels([])
+yticks(0.1:0.2:0.5)
+axis([1 6 0.1 0.5])
+ylabel('Peak velocity (m/s)')
 set(gca,'TickDir','out')
 
-% plot average of baseline data
-subplot(1,5,2:5); hold on
-for i = 1:3
-    avg = mean(vel_mu{i}(1:6));
-    plot([trials{trialIdx(i)-1}(1) trials{trialIdx(i)}(end)],[avg avg],'Color',col(i,:),'LineWidth',4)
-end
-
 % plot data from days 1-2
+subplot(1,8,3:8); hold on
+
 for i = 2:5
     for j = 1:3
-        s = shadedErrorBar(trials{i},vel_mu{gblock(j)}(trials{i}), vel_se{gblock(j)}(trials{i}));
+        s = shadedErrorBar(trials{i},pkVel_mu{gblock(j)}(trials{i}), pkVel_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
     end
 end
@@ -290,25 +312,35 @@ end
 % plot data from days 3-5
 for i = 6:14
     for j = 1:2
-        s = shadedErrorBar(trials{i},vel_mu{gblock(j)}(trials{i}), vel_se{gblock(j)}(trials{i}));
+        s = shadedErrorBar(trials{i},pkVel_mu{gblock(j)}(trials{i}), pkVel_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
     end
 end
 
 % plot data from days 6-10
 for i = 15:29
-    s = shadedErrorBar(trials{i},vel_mu{3}(trials{i}), vel_se{3}(trials{i}));
+    s = shadedErrorBar(trials{i},pkVel_mu{3}(trials{i}), pkVel_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
 
-xlabel('Trial Number')
 xticks(dayStart)
 xticklabels(dayStartLabels)
-% yticks(400:400:1800)
-axis([7 566 0 0.4])
-legend({'2-day','5-day','10-day'})
-title('Training')
+yticks(0.1:0.2:0.5)
+axis([7 566 0.1 0.5])
 set(gca,'TickDir','out')
+
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
+
+y = [mean(pkVel{1}(1:30,:))'; mean(pkVel{2}(1:30,:))'; mean(pkVel{3}(1:30,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "baseline";
+blockNames(33:64,1) = "late";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
 
 %% compare path length, movement time, reaction time from flip block
 
@@ -437,7 +469,7 @@ set(gca,'TickDir','out')
 %% plot reaction time and initial velocity of away vs toward trials
 
 figure(7); clf
-subplot(1,4,1); hold on
+subplot(1,2,1); hold on
 for i = 1:Ngroups
     n = length(RT_toward{i});
     
@@ -457,7 +489,7 @@ ylabel('Reaction time (ms)')
 set(gca, 'TickDir', 'out')
 legend({'2-day','5-day','10-day'},'Location','northwest')
 
-subplot(1,4,2); hold on
+subplot(1,2,2); hold on
 for i = 1:Ngroups
     n = length(vel_toward{i});
     
@@ -475,43 +507,84 @@ ylim([0.05 0.35])
 ylabel('Tangential initial velocity (m/s)')
 set(gca, 'TickDir', 'out')
 
-subplot(1,4,3); hold on
+
+f = figure(15); clf
+set(f,'Position',[200 200 140 120]); hold on
 for i = 1:Ngroups
-    n = length(vel_toward{i});
+    n = length(RTX_toward{i});
     
     % plot away trials
-    plot(i + 0.5*(rand(1,n) - 0.5), velX_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
-    plot(i, mean(velX_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+    plot(i + 0.5*(rand(1,n) - 0.5), RTX_away{i}, '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility','off')
+    plot(i, mean(RTX_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 6, 'MarkerFaceColor', col(i,:))
     
     % plot toward trials
-    plot(i+4 + 0.5*(rand(1,n) - 0.5),velX_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
-    plot(i+4, mean(velX_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
-end
+    plot(i+4 + 0.5*(rand(1,n) - 0.5),RTX_toward{i}, '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility', 'off')
+    plot(i+4, mean(RTX_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+end    
 xticks([2 6])
 xticklabels({'Away','Toward'})
-yticks(0:0.1:0.3)
-ylim([0 0.3])
-ylabel('Horizontal initial velocity (m/s)')
+yticks(200:400:1400)
+axis([0.5 7.5 200 1400])
+ylabel('Horizontal reaction time (ms)')
 set(gca, 'TickDir', 'out')
 
-subplot(1,4,4); hold on
-for i = 1:Ngroups
-    n = length(vel_toward{i});
-    
-    % plot away trials
-    plot(i + 0.5*(rand(1,n) - 0.5), velY_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
-    plot(i, mean(velY_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
-    
-    % plot toward trials
-    plot(i+4 + 0.5*(rand(1,n) - 0.5),velY_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
-    plot(i+4, mean(velY_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
-end
-xticks([2 6])
-xticklabels({'Away','Toward'})
-yticks(0:0.1:0.3)
-ylim([0 0.3])
-ylabel('Vertical initial velocity (m/s)')
-set(gca, 'TickDir', 'out')
+% subplot(1,4,2); hold on
+% for i = 1:Ngroups
+%     n = length(RTY_toward{i});
+%     
+%     % plot away trials
+%     plot(i + 0.5*(rand(1,n) - 0.5), RTY_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+%     plot(i, mean(RTY_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+%     
+%     % plot toward trials
+%     plot(i+4 + 0.5*(rand(1,n) - 0.5),RTY_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+%     plot(i+4, mean(RTY_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+% end    
+% xticks([2 6])
+% xticklabels({'Away','Toward'})
+% ylim([200 1800])
+% ylabel('Vertical reaction time (ms)')
+% set(gca, 'TickDir', 'out')
+
+% subplot(1,2,2); hold on
+% for i = 1:Ngroups
+%     n = length(vel_toward{i});
+%     
+%     % plot away trials
+%     plot(i + 0.5*(rand(1,n) - 0.5), velX_away{i}, '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility','off')
+%     plot(i, mean(velX_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 6, 'MarkerFaceColor', col(i,:))
+%     
+%     % plot toward trials
+%     plot(i+4 + 0.5*(rand(1,n) - 0.5),velX_toward{i}, '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility', 'off')
+%     plot(i+4, mean(velX_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+% end
+% xticks([2 6])
+% xticklabels({'Away','Toward'})
+% yticks(0:0.1:0.3)
+% axis([0.5 7.5 0 0.3])
+% ylabel('Horizontal initial velocity (m/s)')
+% set(gca, 'TickDir', 'out')
+
+% subplot(1,4,4); hold on
+% for i = 1:Ngroups
+%     n = length(vel_toward{i});
+%     
+%     % plot away trials
+%     plot(i + 0.5*(rand(1,n) - 0.5), velY_away{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility','off')
+%     plot(i, mean(velY_away{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:))
+%     
+%     % plot toward trials
+%     plot(i+4 + 0.5*(rand(1,n) - 0.5),velY_toward{i}, '.', 'MarkerSize', 20, 'Color', col(i,:), 'HandleVisibility', 'off')
+%     plot(i+4, mean(velY_toward{i}), 'ko', 'LineWidth', 1, 'MarkerSize', 10, 'MarkerFaceColor', col(i,:), 'HandleVisibility', 'off')
+% end
+% xticks([2 6])
+% xticklabels({'Away','Toward'})
+% yticks(0:0.1:0.3)
+% ylim([0 0.3])
+% ylabel('Vertical initial velocity (m/s)')
+% set(gca, 'TickDir', 'out')
+
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/horizontal_kinematics','-dpdf','-painters')
 
 %% correlate reaction time and initial velocity to proportion of away trials
 
