@@ -181,15 +181,15 @@ print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/polar','-dpdf','-pain
 order = [3 2 1];
 Nday = [2 5 10];
 
-f = figure(3); clf
-set(f,'Position',[200 200 150 150]);
+f = figure(3); clf; hold on
+set(f,'Position',[200 200 140 140]);
 for i = 1:Ngroup
     o = order(i);
     for j = 1:Nday(o)
         if j == 1
-            s = shadedErrorBar([-1 1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, [sd_se(1,o) sd_se(1,o)]*180/pi);
-            editErrorBar(s,col(o,:),0.5);
-%             errorbar(1,sd_mu(1,o)*180/pi, sd_se(1,o)*180/pi, '.', 'Color', col2(o,:), 'MarkerSize', 20)
+%             s = shadedErrorBar([-1 1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, [sd_se(1,o) sd_se(1,o)]*180/pi);
+%             editErrorBar(s,col(o,:),0.5);
+            plot([2 3*Nday(o)-1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, 'Color', col(o,:), 'LineWidth', 1)
             
             idx = 2:3;
         elseif j == Nday(o)
@@ -207,11 +207,11 @@ for i = 1:Ngroup
     end
 end
 set(gca,'TickDir','out')
-xticks([0 4 13 28])
-xticklabels({'Baseline',2,5,10})
+xticks([2 4 13 28])
+xticklabels([1 2 5 10])
 xlabel('Day')
 ylabel('Circular st dev')
-xlim([-1 30])
+xlim([2 29])
 yticks(0:15:60)
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')

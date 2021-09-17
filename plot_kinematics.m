@@ -92,8 +92,6 @@ end
 gblock = [3 2 1]; % set order in which to plot groups (10-day, 5-day, then 2-day)
 trialIdx = [5 14 29]; % select which trials to plot from variable "trials"
 lw = 0.25; % line width for plots
-% dayStart = [7 47:60:527]; % xticks
-% dayStartLabels = [31 231:300:2930]; % xticklabels
 dayStart = [7 47 227 527];
 dayStartLabels = {'1','2','5','10'};
 
@@ -103,25 +101,16 @@ for i = 1:29
     trials{i+1} = (i-1)*20 + 7:(i-1)*20 + 26;
 end
 
-f = figure(1); clf
-set(f,'Position',[200 200 170 120]);
+f = figure(1); clf; hold on
+set(f,'Position',[200 200 140 140]);
 
 % plot baseline data
-subplot(1,8,1:2); hold on
 for j = 1:3
-    s = shadedErrorBar(trials{1}, pLength_mu{gblock(j)}(trials{1})*100, pLength_se{gblock(j)}(trials{1})*100);
-    editErrorBar(s,col(gblock(j),:),lw);
+    avg = 100*mean(pLength_mu{j}(trials{1}));
+    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
-ylabel('Path length (cm)')
-xticks(1)
-xticklabels('Baseline')
-yticks(10:10:40)
-axis([1 6 10 40])
-set(gca,'TickDir','out')
 
 % plot data from days 1-2
-subplot(1,8,3:8); hold on
-
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},pLength_mu{gblock(j)}(trials{i})*100, pLength_se{gblock(j)}(trials{i})*100);
@@ -142,46 +131,38 @@ for i = 15:29
     s = shadedErrorBar(trials{i}, pLength_mu{3}(trials{i})*100, pLength_se{3}(trials{i})*100);
     editErrorBar(s,col(3,:),lw);
 end
-xlabel('Trial Number')
+xlabel('Day')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(10:10:40)
+ylabel('Path length (cm)')
 axis([7 566 10 40])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
-y = [mean(pLength{1}(1:30,:))'; mean(pLength{2}(1:30,:))'; mean(pLength{3}(1:30,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
-
-groupNames([1:13 33:45],1) = "2-day";
-groupNames([14:27 46:59],1) = "5-day";
-groupNames([28:32 60:64],1) = "10-day";
-blockNames(1:32,1) = "baseline";
-blockNames(33:64,1) = "late";
-subject = [1:32 1:32]';
-T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
+% y = [mean(pLength{1}(1:30,:))'; mean(pLength{2}(1:30,:))'; mean(pLength{3}(1:30,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
+% 
+% groupNames([1:13 33:45],1) = "2-day";
+% groupNames([14:27 46:59],1) = "5-day";
+% groupNames([28:32 60:64],1) = "10-day";
+% blockNames(1:32,1) = "baseline";
+% blockNames(33:64,1) = "late";
+% subject = [1:32 1:32]';
+% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
 
 %% plot movement time
-f = figure(2); clf
-set(f,'Position',[200 200 170 120]);
+f = figure(2); clf; hold on
+set(f,'Position',[200 200 140 140]);
 
 % plot baseline data
-subplot(1,8,1:2); hold on
 for j = 1:3
-    s = shadedErrorBar(trials{1},movtime_mu{gblock(j)}(trials{1}), movtime_se{gblock(j)}(trials{1}));
-    editErrorBar(s,col(gblock(j),:),lw);
+    avg = mean(movtime_mu{j}(trials{1}));
+    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
-xticks(1)
-xticklabels([])
-yticks(0:2:8)
-axis([1 6 0 6])
-ylabel('Movement time (s)')
-set(gca,'TickDir','out')
 
 % plot data from days 1-2
-subplot(1,8,3:8); hold on
-
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},movtime_mu{gblock(j)}(trials{i}), movtime_se{gblock(j)}(trials{i}));
@@ -202,45 +183,39 @@ for i = 15:29
     s = shadedErrorBar(trials{i},movtime_mu{3}(trials{i}), movtime_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
-xlabel('Trial Number')
+xlabel('Day')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(0:2:8)
+ylabel('Movement time (s)')
 axis([7 566 0 6])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
-y = [mean(movtime{1}(1:30,:))'; mean(movtime{2}(1:30,:))'; mean(movtime{3}(1:30,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
-
-groupNames([1:13 33:45],1) = "2-day";
-groupNames([14:27 46:59],1) = "5-day";
-groupNames([28:32 60:64],1) = "10-day";
-blockNames(1:32,1) = "baseline";
-blockNames(33:64,1) = "late";
-subject = [1:32 1:32]';
-T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
+% y = [mean(movtime{1}(1:30,:))'; mean(movtime{2}(1:30,:))'; mean(movtime{3}(1:30,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
+% 
+% groupNames([1:13 33:45],1) = "2-day";
+% groupNames([14:27 46:59],1) = "5-day";
+% groupNames([28:32 60:64],1) = "10-day";
+% blockNames(1:32,1) = "baseline";
+% blockNames(33:64,1) = "late";
+% subject = [1:32 1:32]';
+% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
 
 %% plot reaction time
-f = figure(3); clf
-set(f,'Position',[200 200 170 120]);
+f = figure(3); clf; hold on 
+set(f,'Position',[200 200 160 140]);
 
 % plot baseline data
-subplot(1,8,1:2); hold on
 for j = 1:3
-    s = shadedErrorBar(trials{1},RT_mu{gblock(j)}(trials{1}), RT_se{gblock(j)}(trials{1}));
-    editErrorBar(s,col(gblock(j),:),lw);
+    avg = mean(RT_mu{j}(trials{1}));
+    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
-xticks(1)
-xticklabels([])
-yticks(300:400:1700)
-axis([1 6 300 1100])
-ylabel('Reaction time (ms)')
-set(gca,'TickDir','out')
+
 
 % plot data from days 1-2
-subplot(1,8,3:8); hold on
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},RT_mu{gblock(j)}(trials{i}), RT_se{gblock(j)}(trials{i}));
@@ -261,47 +236,38 @@ for i = 15:29
     s = shadedErrorBar(trials{i},RT_mu{3}(trials{i}), RT_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
-
-xlabel('Trial Number')
+xlabel('Day')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(300:400:1700)
+ylabel('Reaction time (ms)')
 axis([7 566 300 1100])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
-y = [mean(RT{1}(1:30,:))'; mean(RT{2}(1:30,:))'; mean(RT{3}(1:30,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
-
-groupNames([1:13 33:45],1) = "2-day";
-groupNames([14:27 46:59],1) = "5-day";
-groupNames([28:32 60:64],1) = "10-day";
-blockNames(1:32,1) = "baseline";
-blockNames(33:64,1) = "late";
-subject = [1:32 1:32]';
-T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+% y = [mean(RT{1}(1:30,:))'; mean(RT{2}(1:30,:))'; mean(RT{3}(1:30,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
+% 
+% groupNames([1:13 33:45],1) = "2-day";
+% groupNames([14:27 46:59],1) = "5-day";
+% groupNames([28:32 60:64],1) = "10-day";
+% blockNames(1:32,1) = "baseline";
+% blockNames(33:64,1) = "late";
+% subject = [1:32 1:32]';
+% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 %% plot peak reach velocity
-f = figure(4); clf
-set(f,'Position',[200 200 170 120]);
+f = figure(4); clf; hold on
+set(f,'Position',[200 200 140 140]);
 
 % plot baseline data
-subplot(1,8,1:2); hold on
 for j = 1:3
-    s = shadedErrorBar(trials{1},pkVel_mu{gblock(j)}(trials{1}), pkVel_se{gblock(j)}(trials{1}));
-    editErrorBar(s,col(gblock(j),:),lw);
+    avg = mean(pkVel_mu{j}(trials{1}));
+    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
-xticks(1)
-xticklabels([])
-yticks(0.1:0.2:0.5)
-axis([1 6 0.1 0.5])
-ylabel('Peak velocity (m/s)')
-set(gca,'TickDir','out')
 
 % plot data from days 1-2
-subplot(1,8,3:8); hold on
-
 for i = 2:5
     for j = 1:3
         s = shadedErrorBar(trials{i},pkVel_mu{gblock(j)}(trials{i}), pkVel_se{gblock(j)}(trials{i}));
@@ -322,25 +288,26 @@ for i = 15:29
     s = shadedErrorBar(trials{i},pkVel_mu{3}(trials{i}), pkVel_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
-
+xlabel('Day')
 xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(0.1:0.2:0.5)
+ylabel('Peak velocity (m/s)')
 axis([7 566 0.1 0.5])
 set(gca,'TickDir','out')
 
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
-y = [mean(pkVel{1}(1:30,:))'; mean(pkVel{2}(1:30,:))'; mean(pkVel{3}(1:30,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
-
-groupNames([1:13 33:45],1) = "2-day";
-groupNames([14:27 46:59],1) = "5-day";
-groupNames([28:32 60:64],1) = "10-day";
-blockNames(1:32,1) = "baseline";
-blockNames(33:64,1) = "late";
-subject = [1:32 1:32]';
-T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
+% y = [mean(pkVel{1}(1:30,:))'; mean(pkVel{2}(1:30,:))'; mean(pkVel{3}(1:30,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
+% 
+% groupNames([1:13 33:45],1) = "2-day";
+% groupNames([14:27 46:59],1) = "5-day";
+% groupNames([28:32 60:64],1) = "10-day";
+% blockNames(1:32,1) = "baseline";
+% blockNames(33:64,1) = "late";
+% subject = [1:32 1:32]';
+% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
 
 %% compare path length, movement time, reaction time from flip block
 

@@ -51,9 +51,8 @@ end
 
 % set variables for plotting
 delay = 20; % time after movement initiation when velocity is computed
-trialIdx = [2922 467]; % select trials to plot
-axisLims = [0.43 0.73 0.1 0.4;
-            0.4 0.7 0.15 0.45]; % set axes for plots
+trialIdx = 2875; % select trials to plot
+axisLims = [0.5 0.8 0.1 0.4]; % set axes for plots
 
 % generate plot
 f = figure(2); clf
@@ -63,38 +62,38 @@ for i = 1:2 % loop to generate plot for toward or away trial
     if i == 1
         a = d.day10{3};
     else
-        a = d.day2{1};
+        a = d.day10{1};
     end
     
     % set variables
-    trial = trialIdx(i); % trial to be plotted
+    trial = trialIdx; % trial to be plotted
     targ = a.targetAbs(trial-1:trial,:); % target trajectory
     curs = a.C{trial}; % cursor trajectory
     
     % calculate direction of instantaneous velocity vector
-    init = a.init_x(trial)+delay; % index of cursor position 150 ms after movement initiation
+    init = a.init(trial)+delay; % index of cursor position 150 ms after movement initiation
     vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
     vel = vel(init,:);
     angle = atan2(vel(2),vel(1)); % find direction of velocity vector
     vector = 0.03*[cos(angle) sin(angle)]; % scale vector
     
     subplot(1,2,i); hold on
-    plot([targ(1,1) targ(1,1)], [targ(1,2)-0.15 targ(1,2)+0.15], 'k--', 'LineWidth', 1) % mirror axis
+    plot([targ(1,1) targ(1,1)], [targ(1,2)-0.07 targ(1,2)+0.1], 'k--', 'LineWidth', 1) % mirror axis
     plot([curs(init,1) curs(init,1)+vector(1)], [curs(init,2) curs(init,2)+vector(2)], 'Color', col(3,:), 'LineWidth',4) % instantaneous velocity vector
     plot(targ(1,1), targ(1,2), '.', 'Color', [0.6 0.6 0.6], 'MarkerSize', 35) % starting target
     plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target
     plot(targ(1,1) - (targ(2,1) - targ(1,1)), targ(2,2), 'o', 'Color', [1 0.4 0.4], 'MarkerSize', 10) % mirrored ending target
     plot(curs(:,1), curs(:,2),'k','LineWidth',1) % cursor trajectory
-    axis(axisLims(i,:))
+    axis(axisLims)
     axis square
     xticks([])
     yticks([])
 
     if i == 2
-        plot([0.46 0.58],[0.2 0.2],'k','LineWidth',4)
+        plot([0.6 0.72],[0.15 0.15],'k','LineWidth',4)
     end
 end
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
 
 %%
 trial = 2896;
