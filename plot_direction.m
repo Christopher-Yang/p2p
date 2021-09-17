@@ -217,34 +217,31 @@ yticks(0:15:60)
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
 
 %% plot kernel-smoothed PDF
-figure(4); clf
+f = figure(4); clf
+set(f,'Position',[200 200 500 140]);
 for i = 1:Ngroup
     for j = 1:3
-        trial = trials{gblocks{i}(j)};
+        trial = trials{gblocks{4-i}(j)};
         subplot(1,3,j); hold on
-        [f,xi] = ksdensity(reshape(dirError{i}(trial,:),[numel(dirError{i}(trial,:)) 1]));
-        plot(xi,f,'LineWidth',2,'Color',col(i,:))
+        [f,xi] = ksdensity(reshape(dirError{4-i}(trial,:),[numel(dirError{4-i}(trial,:)) 1]));
+        plot(xi,f,'LineWidth',1,'Color',col(4-i,:))
         if i == 3
             title(blocks{j})
-            axis([-180 180 0 .06])
+            axis([-90 90 0 .06])
             xticks(-180:90:180)
             box off
             set(gca,'Tickdir','out')
+            yticks(0:0.03:0.06)
             if j == 1
                 ylabel('Kernel-smoothed probability density')
-                yticks(0:0.02:0.06)
             elseif j == 2
                 xlabel('Reach direction error (degrees)')
-                yticks([])
-            elseif j == 3
-                yticks([])
             end
         end
     end
 end
-legend(graph_names)
 
-% print('C:/Users/Chris/Dropbox/Conferences/CNS 2021/ksdensity','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/ksdensity','-dpdf','-painters')
 
 %% correlate proportion of away trials with standard deviation of von Mises distribution
 
