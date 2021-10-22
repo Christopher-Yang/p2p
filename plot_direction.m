@@ -110,13 +110,13 @@ sd_se = nanstd(sd,[],3)./sqrt(repmat(allSubj,[size(sd,1) 1]));
 
 sd2 = permute(sd,[1 3 2]);
 
-y = [sd2(1,1:13,1)'; sd2(5,1:13,1)'; sd2(1,:,2)'; sd2(14,:,2)'; sd2(1,1:5,3)'; sd2(29,1:5,3)']*180/pi;
+y = [sd2(3,1:13,1)'; sd2(5,1:13,1)'; sd2(5,:,2)'; sd2(14,:,2)'; sd2(14,1:5,3)'; sd2(29,1:5,3)']*180/pi;
 
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
 groupNames(55:64,1) = "10-day";
-blockNames([1:13 27:40 55:59],1) = "baseline";
-blockNames([14:26 41:54 60:64],1) = "late";
+blockNames([1:13 27:40 55:59],1) = "before";
+blockNames([14:26 41:54 60:64],1) = "after";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','sd'});
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')

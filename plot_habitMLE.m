@@ -120,10 +120,9 @@ end
 
 %% check whether there's extinction of habit in 1st vs 2nd half of flip block
 for k = 1:2
+    idx = (k-1)*50 + (1:50);
     for j = 1:Ngroup
-        for i = 1:allSubj(j)
-            
-            idx = (k-1)*50 + (1:50);
+        for i = 1:allSubj(j)            
             
             log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,4), target_gd{j}(idx,4), target_hab{j}(idx,4));
             
@@ -137,11 +136,21 @@ for k = 1:2
     end
 end
 
-figure(10); clf; hold on
+f = figure(10); clf; hold on
+set(f,'Position',[200 200 140 130]);
 for i = 1:3
-    plot((i-1)*2 + (1:2), weight2_opt2{i}','k')
-    plot((i-1)*2 + (1:2), mean(weight2_opt2{i}),'k','LineWidth',3)
+    plot(1:2, weight2_opt2{i}','Color',[col2(i,:) 0.5],'HandleVisibility','off')
 end
+for i = 1:3
+    plot(1:2, mean(weight2_opt2{i}),'-o','Color',col2(i,:),'MarkerFaceColor',col2(i,:),'MarkerSize',6,'LineWidth',1)
+end
+set(gca,'TickDir','out')
+xlim([0.75 2.25])
+xticks([1 2])
+xticklabels({'first half','second half'})
+ylabel({'Weight'})
+
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/p2p_half','-dpdf','-painters')
 
 %% perform MLE for uniform model
 for k = 1:Nblock
@@ -169,16 +178,16 @@ for i = 1:Ngroup
 end
 %% statistical comparison between von Mises and uniform model
 
-% y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
-% 
-% groupNames(1:26,1) = "2-day";
-% groupNames(27:54,1) = "5-day";
-% groupNames(55:64,1) = "10-day";
-% modelType([1:13 27:40 55:59],1) = "unif";
-% modelType([14:26 41:54 60:64],1) = "vm";
-% subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
-% T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','subject','bic'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
+y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
+
+groupNames(1:26,1) = "2-day";
+groupNames(27:54,1) = "5-day";
+groupNames(55:64,1) = "10-day";
+modelType([1:13 27:40 55:59],1) = "unif";
+modelType([14:26 41:54 60:64],1) = "vm";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','subject','bic'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
 
 %% compare log likelihoods
 blocks2 = {'Baseline','Early','Late','Flip'};
@@ -323,18 +332,26 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habitMLE','-dpdf','-painters')
 
 % save data for analysis in R
-% z = [];
-% for i = 1:3
-%     z = [z; reshape(weight2_opt{i}(:,3:4), [allSubj(i)*2 1])];
-% end
-% groupNames(1:26,1) = "2-day";
-% groupNames(27:54,1) = "5-day";
-% groupNames(55:64,1) = "10-day";
-% blockNames([1:13 27:40 55:59],1) = "Late";
-% blockNames([14:26 41:54 60:64],1) = "Flip";
-% subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
-% T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitMLE.csv')
+z = [];
+for i = 1:3
+    z = [z; reshape(weight2_opt{i}(:,3:4), [allSubj(i)*2 1])];
+end
+groupNames(1:26,1) = "2-day";
+groupNames(27:54,1) = "5-day";
+groupNames(55:64,1) = "10-day";
+blockNames([1:13 27:40 55:59],1) = "Late";
+blockNames([14:26 41:54 60:64],1) = "Flip";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight1.csv')
+
+
+z = [];
+for i = 1:3
+    z = [z; reshape(weight1_opt{i}(:,3:4), [allSubj(i)*2 1])];
+end
+T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight2.csv')
 
 %%
 idx = [5 45];
@@ -368,6 +385,9 @@ disp(['Significance of slope: p = ' num2str(p)])
 
 %% compare  kinematics between reaches towards mirrored and actual targets
 
+times = 0:10:1000;
+
+figure(8); clf; hold on
 for j = 1:Ngroup
     for i = 1:allSubj(j)
         vel = d.(groups{j}){i}.initVel_filt(end-99:end);
@@ -380,8 +400,37 @@ for j = 1:Ngroup
         velX_hab{j}(i) = nanmean(abs(velX(Pr_idx{j}(:,i) == 2)));
         RT_gd{j}(i) = mean(RT(Pr_idx{j}(:,i) == 1));
         RT_hab{j}(i) = mean(RT(Pr_idx{j}(:,i) == 2));
+        
+        RT_all{j}(:,i) = RT;
     end
+    
+    Nsubj = length(d.(groups{j}));
+    frac{j} = NaN(length(times),Nsubj);
+    
+    for i = 1:length(times)
+        high = RT_all{j} < times(i) + 100;
+        low = RT_all{j} > times(i);
+        bin = (high + low) == 2;        
+        total = sum(bin,1);
+        
+        if total > 5
+            habIdx = Pr_idx{j} == 2;
+            habitBin = (habIdx + bin) == 2;
+
+            frac{j}(i,:) = sum(habitBin,1)./total;
+        end
+    end
+
+    frac_mu{j} = mean(frac{j},2,'omitnan');
+    frac_se{j} = std(frac{j},[],2,'omitnan')./sqrt(sum(~isnan(frac{j}),2));
+
+    s = shadedErrorBar(times+50,frac_mu{j},frac_se{j});
+    editErrorBar(s,col2(j,:),1)
 end
+ylim([0 1])
+ylabel('P(habitual)')
+xlabel('Reaction time (ms)')
+legend(graph_names)
 
 % z = [vel_gd{1}'; vel_gd{2}'; vel_gd{3}'; vel_hab{1}'; vel_hab{2}'; vel_hab{3}'];
 % dlmwrite('C:/Users/Chris/Documents/R/habit/data/vel.csv', z)

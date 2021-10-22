@@ -70,8 +70,8 @@ for i = 1:Ngroups
         pLengthBin{i}(j,:) = mean(pLength{i}((j-1)*5+1:(j-1)*5+5,:),1);
         movtimeBin{i}(j,:) = mean(movtime{i}((j-1)*5+1:(j-1)*5+5,:),1);
         RTBin{i}(j,:) = mean(RT{i}((j-1)*5+1:(j-1)*5+5,:),1);
-        velBin{i}(j,:) = nanmean(vel{i}((j-1)*5+1:(j-1)*5+5,:),1);
-        pkVelBin{i}(j,:) = nanmean(pkVel{i}((j-1)*5+1:(j-1)*5+5,:),1);
+        velBin{i}(j,:) = mean(vel{i}((j-1)*5+1:(j-1)*5+5,:),1);
+        pkVelBin{i}(j,:) = mean(pkVel{i}((j-1)*5+1:(j-1)*5+5,:),1);
     end
     
     pLength_mu{i} = mean(pLengthBin{i},2);
@@ -80,10 +80,10 @@ for i = 1:Ngroups
     movtime_se{i} = std(movtimeBin{i},[],2)/sqrt(Nsubj(i));
     RT_mu{i} = mean(RTBin{i},2);
     RT_se{i} = std(RTBin{i},[],2)/sqrt(Nsubj(i));
-    vel_mu{i} = nanmean(velBin{i},2);
-    vel_se{i} = nanstd(velBin{i},[],2)./sqrt(sum(~isnan(velBin{i}),2));
-    pkVel_mu{i} = nanmean(pkVelBin{i},2);
-    pkVel_se{i} = nanstd(pkVelBin{i},[],2)./sqrt(sum(~isnan(pkVelBin{i}),2));
+    vel_mu{i} = mean(velBin{i},2);
+    vel_se{i} = std(velBin{i},[],2)./sqrt(sum(~isnan(velBin{i}),2));
+    pkVel_mu{i} = mean(pkVelBin{i},2);
+    pkVel_se{i} = std(pkVelBin{i},[],2)./sqrt(sum(~isnan(pkVelBin{i}),2));
 end
 
 %% plot path length
@@ -94,6 +94,7 @@ trialIdx = [5 14 29]; % select which trials to plot from variable "trials"
 lw = 0.25; % line width for plots
 dayStart = [7 47 227 527];
 dayStartLabels = {'1','2','5','10'};
+dayStart2 = 47:60:527;
 
 % x-axis for binned trials
 trials{1} = 1:6;
@@ -103,6 +104,8 @@ end
 
 f = figure(1); clf; hold on
 set(f,'Position',[200 200 140 140]);
+
+plot([dayStart2; dayStart2],[10 40],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
 for j = 1:3
@@ -141,20 +144,22 @@ set(gca,'TickDir','out')
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
-% y = [mean(pLength{1}(1:30,:))'; mean(pLength{2}(1:30,:))'; mean(pLength{3}(1:30,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
-% 
-% groupNames([1:13 33:45],1) = "2-day";
-% groupNames([14:27 46:59],1) = "5-day";
-% groupNames([28:32 60:64],1) = "10-day";
-% blockNames(1:32,1) = "baseline";
-% blockNames(33:64,1) = "late";
-% subject = [1:32 1:32]';
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
+y = [mean(pLength{1}(31:130,:))'; mean(pLength{2}(331:430,:))'; mean(pLength{3}(1231:1330,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "before";
+blockNames(33:64,1) = "after";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
 
 %% plot movement time
 f = figure(2); clf; hold on
 set(f,'Position',[200 200 140 140]);
+
+plot([dayStart2; dayStart2],[0 6],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
 for j = 1:3
@@ -193,20 +198,22 @@ set(gca,'TickDir','out')
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
-% y = [mean(movtime{1}(1:30,:))'; mean(movtime{2}(1:30,:))'; mean(movtime{3}(1:30,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
-% 
-% groupNames([1:13 33:45],1) = "2-day";
-% groupNames([14:27 46:59],1) = "5-day";
-% groupNames([28:32 60:64],1) = "10-day";
-% blockNames(1:32,1) = "baseline";
-% blockNames(33:64,1) = "late";
-% subject = [1:32 1:32]';
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
+y = [mean(movtime{1}(31:130,:))'; mean(movtime{2}(331:430,:))'; mean(movtime{3}(1231:1330,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "before";
+blockNames(33:64,1) = "after";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
 
 %% plot reaction time
 f = figure(3); clf; hold on 
 set(f,'Position',[200 200 160 140]);
+
+plot([dayStart2; dayStart2],[300 1100],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
 for j = 1:3
@@ -246,20 +253,22 @@ set(gca,'TickDir','out')
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
-% y = [mean(RT{1}(1:30,:))'; mean(RT{2}(1:30,:))'; mean(RT{3}(1:30,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
-% 
-% groupNames([1:13 33:45],1) = "2-day";
-% groupNames([14:27 46:59],1) = "5-day";
-% groupNames([28:32 60:64],1) = "10-day";
-% blockNames(1:32,1) = "baseline";
-% blockNames(33:64,1) = "late";
-% subject = [1:32 1:32]';
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+y = [mean(RT{1}(31:130,:))'; mean(RT{2}(331:430,:))'; mean(RT{3}(1231:1330,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "before";
+blockNames(33:64,1) = "after";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 %% plot peak reach velocity
 f = figure(4); clf; hold on
 set(f,'Position',[200 200 140 140]);
+
+plot([dayStart2; dayStart2],[0.1 0.5],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
 for j = 1:3
@@ -298,16 +307,16 @@ set(gca,'TickDir','out')
 
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
-% y = [mean(pkVel{1}(1:30,:))'; mean(pkVel{2}(1:30,:))'; mean(pkVel{3}(1:30,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
-% 
-% groupNames([1:13 33:45],1) = "2-day";
-% groupNames([14:27 46:59],1) = "5-day";
-% groupNames([28:32 60:64],1) = "10-day";
-% blockNames(1:32,1) = "baseline";
-% blockNames(33:64,1) = "late";
-% subject = [1:32 1:32]';
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
+y = [mean(pkVel{1}(31:130,:))'; mean(pkVel{2}(331:430,:))'; mean(pkVel{3}(1231:1330,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
+
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "before";
+blockNames(33:64,1) = "after";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
 
 %% compare path length, movement time, reaction time from flip block
 
