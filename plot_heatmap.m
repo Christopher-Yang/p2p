@@ -1,4 +1,4 @@
-function plot_reachDirection(d)
+function plot_reachDirection(data)
 
 % set variables for plotting
 groups = {'day2', 'day5', 'day10'}; % names of groups
@@ -27,10 +27,10 @@ for j = 1:Ngroup % loop over groups
         
         % get target direction and initial reach direction, offsetting by
         % 90 deg so that positive y-axis is defined as 0
-        targ = d.(group){i}.targAng([1:130 end-199:end]) * 180/pi + 90;
-        reach = d.(group){i}.initDir_noRot([1:130 end-199:end]) * 180/pi + 90;
+        targ = data.(group){i}.targAng([1:130 end-199:end]) * 180/pi + 90;
+        reach = data.(group){i}.initDir_noRot([1:130 end-199:end]) * 180/pi + 90;
         
-        % unwrap targ and reach to be between (-180, 180] deg
+        % unwrap targ and reach to be between [-180, 180) deg
         targ(targ > 180) = targ(targ > 180) - 360;
         reach(reach > 180) = reach(reach > 180) - 360;
         
@@ -56,7 +56,7 @@ for j = 1:Ngroup % loop over groups
     end
 end
 
-% plot heatmap of each block
+%% Figure 4B
 n = length(bins)-1;
 clims = [0 1];
 figure(1); clf
@@ -96,9 +96,10 @@ for j = 1:Ngroup
     end
 end
 
+% save plot for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/flip_direction','-dpdf','-painters')
 
-% plot the different models that were fitted
+%% Figure S2A
 f = figure(2); clf
 set(f,'Position',[200 200 300 150]);
 for i = 1:2
@@ -148,4 +149,5 @@ for i = 1:2
     axis square
 end
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/model_example','-dpdf','-painters')
+% save plot for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/model_example','-dpdf','-painters')

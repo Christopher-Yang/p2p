@@ -1,4 +1,4 @@
-function plot_traj(d)
+function plot_traj(data)
 
 % plot 10 reaches from baseline, early, and late learning
 
@@ -8,23 +8,23 @@ trials{1} = [1:10; 31:40; 331:340]; % trials to plot for 2-day group
 trials{2} = [1:10; 31:40; 1251:1260]; % trials to plot for 5-day group
 trials{3} = [1:10; 31:40; 2811:2820]; % trials to plot for 10-day group
 groups = {'day2','day5','day10'};
-titles = {'Baseline','Early','Late'};
+titles = {'Baseline','Early','Late'}; 
 groupNames = {'2-day','5-day','10-day'};
-Ngroup = length(groupNames);
-Nblock = length(titles);
+Ngroup = length(groupNames); % number of groups
+Nblock = length(titles); % number of blocks
 col = [198 156 109
        0 146 69
        100 149 237
        251 176 59]./255; % colors for plotting
 
-% generate plot
+%% Figure 2A
 figure(1); clf
 for k = 1:Ngroup % loop over groups
     s = subj(k);
     
     for j = 1:Nblock % loop over blocks
         subplot(3,3,(k-1)*3+j); hold on
-        a = d.(groups{k}){s};
+        a = data.(groups{k}){s};
         
         for i = trials{k}(j,:) % loop over trials
             plot(a.targetAbs(i,1),a.targetAbs(i,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 13); % plot targets
@@ -47,11 +47,11 @@ for k = 1:Ngroup % loop over groups
 end
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj','-dpdf','-painters')
 
-%% plot reaches from flip block
+%% Figure 4A
 
 % set variables for plotting
 delay = 20; % time after movement initiation when velocity is computed
-trialIdx = 2875; % select trials to plot
+trialIdx = 2875; % trial to be plotted
 axisLims = [0.5 0.8 0.1 0.4]; % set axes for plots
 
 % generate plot
@@ -60,9 +60,9 @@ set(f,'Position',[200 200 350 200]);
 for i = 1:2 % loop to generate plot for toward or away trial
     
     if i == 1
-        a = d.day10{3};
+        a = data.day10{3};
     else
-        a = d.day10{1};
+        a = data.day10{1};
     end
     
     % set variables
@@ -70,7 +70,7 @@ for i = 1:2 % loop to generate plot for toward or away trial
     targ = a.targetAbs(trial-1:trial,:); % target trajectory
     curs = a.C{trial}; % cursor trajectory
     
-    % calculate direction of instantaneous velocity vector
+    % compute line to plot initial reach direction
     init = a.init(trial)+delay; % index of cursor position 150 ms after movement initiation
     vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
     vel = vel(init,:);
@@ -95,25 +95,24 @@ for i = 1:2 % loop to generate plot for toward or away trial
 end
 print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
 
-%%
-trial = 2896;
-
-a = d.day10{2};
+%% Figure 4F
+trial = 2896; % trial to be plotted
+a = data.day10{2};
 curs = a.C{trial}; % cursor trajectory
+targ = a.targetAbs(trial-1:trial,:); % target positions
+vel = diff(curs); % velocity (not divided by time because only the direction is needed)
 
-vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
-
+% compute line to plot initial reach direction
 init = a.init(trial) + delay;
 initVel = vel(init,:);
 angle = atan2(initVel(2),initVel(1)); % find direction of velocity vector
 vector = 0.03*[cos(angle) sin(angle)]; % scale vector
 
+% initial reach direction based on x-axis movements
 init_x = a.init_x(trial) + delay;
 initVel_x = vel(init_x,:);
 angle = atan2(initVel_x(2),initVel_x(1)); % find direction of velocity vector
 vector_x = 0.03*[cos(angle) sin(angle)]; % scale vector
-
-targ = a.targetAbs(trial-1:trial,:); % target trajectory
 
 f = figure(3); clf; hold on
 set(f,'Position',[200 200 100 100]);
