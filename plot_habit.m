@@ -22,21 +22,16 @@ for i = 1:Ngroup
             trialIdx = trials{gblocks(i,j)};
             
             a = d.(groups{i}){k}.incorrectReach_x(trialIdx);
-            num.x.(groups{i})(k,j) = nansum(a);
-            den.x.(groups{i})(k,j) = 100-sum(isnan(a));
-            habit.x.(groups{i})(k,j) = 100*num.x.(groups{i})(k,j)/den.x.(groups{i})(k,j);
-            
-            a = d.(groups{i}){k}.incorrectReach_y(trialIdx);
-            num.y.(groups{i})(k,j) = nansum(a);
-            den.y.(groups{i})(k,j) = 100-sum(isnan(a));
-            habit.y.(groups{i})(k,j) = 100*num.y.(groups{i})(k,j)/den.y.(groups{i})(k,j);
+            num.(groups{i})(k,j) = nansum(a);
+            den.(groups{i})(k,j) = 100-sum(isnan(a));
+            habit.(groups{i})(k,j) = 100*num.(groups{i})(k,j)/den.(groups{i})(k,j);
         end
     end
 end
 
-x = [reshape(habit.x.day2(:,3:end), [numel(habit.x.day2(:,3:end)) 1]); ...
-    reshape(habit.x.day5(:,3:end), [numel(habit.x.day5(:,3:end)) 1]); ...
-    reshape(habit.x.day10(:,3:end), [numel(habit.x.day10(:,3:end)) 1])];
+x = [reshape(habit.day2(:,3:end), [numel(habit.day2(:,3:end)) 1]); ...
+    reshape(habit.day5(:,3:end), [numel(habit.day5(:,3:end)) 1]); ...
+    reshape(habit.day10(:,3:end), [numel(habit.day10(:,3:end)) 1])];
 
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
@@ -54,29 +49,20 @@ col = [180 180 0
        255 99 71]./255;
 
 rng(34);
-ax = {'x','y'};
 f = figure(1); clf
-set(f,'Position',[200 200 270 150]);
+set(f,'Position',[200 200 140 150]); hold on
 
-for j = 1:2
-    for i = 1:Ngroup
-        subplot(1,2,j); hold on
-        n = Nsubj(i);
-        plot(repmat((i-1) + [1 5],[n 1]) + 0.5*(rand(n,2) - 0.5), habit.(ax{j}).(groups{i})(:,3:4), '.', 'MarkerSize', 12, 'Color', col(i,:))
-        plot((i-1) + [1 5], mean(habit.(ax{j}).(groups{i})(:,3:4),1), 'ko', 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
-        if i == 1
-            xticks([2 6])
-            xticklabels({'Late','Flip'})
-            xlabel('Block')
-            set(gca,'TickDir','out')
-            axis([0 8 0 60])
-            if j == 1
-                ylabel('Aimed away (%)')
-                title('Left hand')
-            else
-                title('Right hand')
-            end
-        end
+for i = 1:Ngroup
+    n = Nsubj(i);
+    plot(repmat((i-1) + [1 5],[n 1]) + 0.5*(rand(n,2) - 0.5), habit.(groups{i})(:,3:4), '.', 'MarkerSize', 12, 'Color', col(i,:))
+    plot((i-1) + [1 5], mean(habit.(groups{i})(:,3:4),1), 'ko', 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
+    if i == 1
+        xticks([2 6])
+        xticklabels({'Late','Flip'})
+        xlabel('Block')
+        set(gca,'TickDir','out')
+        axis([0 8 0 60])
+        ylabel('Aimed away (%)')
     end
 end
 

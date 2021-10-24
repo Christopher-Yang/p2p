@@ -41,7 +41,7 @@ for i = 1:length(names) % loop over groups
         
         % load raw data from data files
         disp('    Loading Subject Data...');
-        d = loadSubjData([path{i},subjnames{subj}],blocks,START); 
+        d = loadSubjData([path{i},subjnames{subj}],blocks); 
 
         % initial data analysis (smooth trajectories, rotate, get RT, etc.)
         disp('    Processing Data...')

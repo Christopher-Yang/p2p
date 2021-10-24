@@ -1,4 +1,4 @@
-function plot_reachDirection(data)
+function plot_heatmap(data)
 
 % set variables for plotting
 groups = {'day2', 'day5', 'day10'}; % names of groups

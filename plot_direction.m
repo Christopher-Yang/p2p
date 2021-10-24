@@ -35,7 +35,6 @@ for i = 1:Ngroup
     end
     
     dirError{i} = dir;
-    bins{i} = data.(groups{i}){1}.targBin;
 end
 
 %% fit mixture model for each participant
