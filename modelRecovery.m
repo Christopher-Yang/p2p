@@ -1,25 +1,33 @@
-function modelRecovery()
+% performs model recovery analysis
 
-rng(2);
-A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
-b = [0 0 1 200 0]';
-paramsInit = [0.33 0.33 10];
-weightInit = 0.8;
+function modelRecovery(loadAccuracy)
 
-% fitting
-Ntrials = 100;
-Nsims = 50;
+% range of parameters to simulate von Mises model
+w1 = 0:0.1:1; % weight of goal-directed von Mises
+w2 = 0:0.1:1; % weight of habitual von Mises
+kappa = 3; % concentration of von Mises
 
-% generate data from mixture model
-w1 = 0:0.1:1;
-w2 = 0:0.1:1;
-kappa = 3;
+% load matrix with precomputed accuracy
+if loadAccuracy
+    load Variables/accuracy
 
-accuracy = NaN(length(w1),length(w2),length(kappa));
-
-for m = 1:length(w1)
-    for k = 1:length(w2)-m+1
-        for j = 1:length(kappa)
+% compute accuracy by model fitting
+else
+    
+    % set variables for analysis
+    rng(2);
+    paramsInit = [0.33 0.33 10]; % initial parameters for von Mises model
+    weightInit = 0.8; % intial weight for uniform model
+    Ntrials = 100; % number of trials to simulate in one run
+    Nsims = 50; % number of times simulate 
+    accuracy = NaN(length(w1),length(w2));
+    
+    % constraints for optimization
+    A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
+    b = [0 0 1 200 0]';
+        
+    for m = 1:length(w1) % loop over all weights of goal-directed distribution
+        for k = 1:length(w2)-m+1 % loop over weights of habitual distribution, constrained by choice of w1
             
             % generate targets
             targ_gd = 2 * pi * (rand(100,1)-0.5);
@@ -32,27 +40,33 @@ for m = 1:length(w1)
             data_unif = pi * rand(100,1);
             data_unif(negIdx) = -data_unif(negIdx);
             
+            % generate data from von Mises model
             idx1 = round(w1(m)*100);
             idx2 = round(w2(k)*100);
             
+            % simulate goal-directed reaches
             if idx1 == 0
                 data1 = [];
             else
-                data1 = vmrand(targ_gd(1:idx1), kappa(j));
+                data1 = vmrand(targ_gd(1:idx1), kappa);
             end
             
+            % simulate habitual reaches
             if idx2 == 0
                 data2 = [];
             else
-                data2 = vmrand(targ_hab(idx1+1:idx1+idx2), kappa(j));
+                data2 = vmrand(targ_hab(idx1+1:idx1+idx2), kappa);
             end
             
+            % simulate random reaches and store data in data_mix
             data_mix = [data1; data2];
             data3 = 2*pi*(rand(100-length(data_mix), 1) - 0.5);
             data_mix = [data_mix; data3];
             
+            % preallocate confusion matrix
             confusion = zeros(2);
             
+            % run simulation Nsims times
             for i = 1:Nsims
                 
                 % fit mix model to mix data
@@ -67,6 +81,7 @@ for m = 1:length(w1)
                 log_likelihood = -neg_log_likelihood;
                 BIC_unif = length(weightInit) * log(Ntrials) - 2 * log_likelihood;
                 
+                % fill in first row of confusion matrix
                 if BIC_mix < BIC_unif
                     confusion(1,1) = confusion(1,1) + 1;
                 else
@@ -85,6 +100,7 @@ for m = 1:length(w1)
                 log_likelihood = -neg_log_likelihood;
                 BIC_unif = length(weightInit) * log(Ntrials) - 2 * log_likelihood;
                 
+                % fill in second row of confusion matrix
                 if BIC_unif < BIC_mix
                     confusion(2,2) = confusion(2,2) + 1;
                 else
@@ -92,27 +108,23 @@ for m = 1:length(w1)
                 end
             end
             
-            accuracy(m,k,j) = sum(diag(confusion))/sum(confusion,'all');
+            accuracy(m,k) = sum(diag(confusion))/sum(confusion,'all');
         end
     end
+    
+    save variables/accuracy accuracy
 end
 
-%%
-
-load accuracy
-
+% store data in more easily plottable forms
 x = repmat(w1',[1 length(w2) length(kappa)]);
 x = x(:);
 y = repmat(w2,[length(w1) 1 length(kappa)]);
 y = y(:);
-% z = repmat(permute(kappa, [1 3 2]),[length(w1) length(w2) 1]);
-% z = z(:);
 
-col = [accuracy(:) zeros(length(x), 2)];
+% col = [accuracy(:) zeros(length(x), 2)];
 
-f = figure(1); clf
+f = figure(17); clf
 set(f,'Position',[200 200 200 150]);
-% scatter(x,y,30,col,'filled')
 scatter(x,y,13,accuracy(:),'filled')
 colormap(copper)
 c = colorbar;
@@ -125,14 +137,8 @@ axis([0 1 0 1])
 axis square
 set(gca,'TickDir','out')
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/model_recovery','-dpdf','-painters')
-
-% imagesc(accuracy)
-% 
-% figure(1); clf
-% scatter3(x,y,z,40,accuracy(:),'filled'); hold on
-% colormap(parula);
-% colorbar
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/model_recovery','-dpdf','-painters')
 
 end
 

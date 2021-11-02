@@ -1,3 +1,5 @@
+% plots various kinematic measures as a function of trials
+
 function plot_kinematics(data)
 
 % set variables for analysis
@@ -12,23 +14,27 @@ col = [180 180 0
        0 191 255
        255 99 71]./255;
 
-for i = 1:Ngroups    
+for i = 1:Ngroups % loop over groups
+    
+    % store data from all subjects
     for j = 1:Nsubj(i)
         a = data.(groups{i}){j};
         pLength{i}(:,j) = a.pathlength;
-        movtime{i}(:,j) = a.movtime./1000;
+        movtime{i}(:,j) = a.movtime;
         RT{i}(:,j) = a.RT;
         pkVel{i}(:,j) = a.pkVel;
     end
     
+    % group data into bins of 5 trials
     Ntrials = size(RT{i},1);
     for j = 1:Ntrials/bin
-        pLengthBin{i}(j,:) = mean(pLength{i}((j-1)*5+1:(j-1)*5+5,:),1);
-        movtimeBin{i}(j,:) = mean(movtime{i}((j-1)*5+1:(j-1)*5+5,:),1);
-        RTBin{i}(j,:) = mean(RT{i}((j-1)*5+1:(j-1)*5+5,:),1);
-        pkVelBin{i}(j,:) = mean(pkVel{i}((j-1)*5+1:(j-1)*5+5,:),1);
+        pLengthBin{i}(j,:) = mean(pLength{i}((j-1)*bin+1:(j-1)*bin+bin,:),1);
+        movtimeBin{i}(j,:) = mean(movtime{i}((j-1)*bin+1:(j-1)*bin+bin,:),1);
+        RTBin{i}(j,:) = mean(RT{i}((j-1)*bin+1:(j-1)*bin+bin,:),1,'omitnan');
+        pkVelBin{i}(j,:) = mean(pkVel{i}((j-1)*bin+1:(j-1)*bin+bin,:),1);
     end
     
+    % average binned data and compute standard error
     pLength_mu{i} = mean(pLengthBin{i},2);
     pLength_se{i} = std(pLengthBin{i},[],2)/sqrt(Nsubj(i));
     movtime_mu{i} = mean(movtimeBin{i},2);
@@ -43,9 +49,9 @@ end
 gblock = [3 2 1]; % set order in which to plot groups (10-day, 5-day, then 2-day)
 trialIdx = [5 14 29]; % select which trials to plot from variable "trials"
 lw = 0.25; % line width for plots
-dayStart = [7 47 227 527];
+dayStart = [7 47 227 527]; % index of day 1, 2, 5, and 10
 dayStartLabels = {'1','2','5','10'};
-dayStart2 = 47:60:527;
+dayStart2 = 47:60:527; % index for all days
 
 % x-axis for binned trials
 trials{1} = 1:6;
@@ -54,7 +60,7 @@ for i = 1:29
 end
 
 %% Figure 2B
-f = figure(1); clf; hold on
+f = figure(4); clf; hold on
 set(f,'Position',[200 200 140 140]);
 
 % vertical lines delineating days
@@ -115,9 +121,10 @@ writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
 
 %% Figure 2C
 
-f = figure(2); clf; hold on
+f = figure(5); clf; hold on
 set(f,'Position',[200 200 140 140]);
 
+% vertical lines delineating days
 plot([dayStart2; dayStart2],[10 40],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
@@ -164,9 +171,10 @@ T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block',
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
 
 %% Figure 2D
-f = figure(3); clf; hold on
+f = figure(6); clf; hold on
 set(f,'Position',[200 200 140 140]);
 
+% vertical lines delineating days
 plot([dayStart2; dayStart2],[0 6],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
@@ -213,10 +221,11 @@ T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block',
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
 
 %% Figure 2E
-f = figure(4); clf; hold on 
+f = figure(7); clf; hold on 
 set(f,'Position',[200 200 140 140]);
 
-plot([dayStart2; dayStart2],[300 1100],'Color',[0.8 0.8 0.8])
+% vertical lines delineating days
+plot([dayStart2; dayStart2],[0 2],'Color',[0.8 0.8 0.8])
 
 % plot baseline data
 for j = 1:3
@@ -249,9 +258,9 @@ end
 xlabel('Day')
 xticks(dayStart)
 xticklabels(dayStartLabels)
-yticks(300:400:1700)
-ylabel('Reaction time (ms)')
-axis([7 566 300 1100])
+yticks(.5:.5:2)
+ylabel('Reaction time (s)')
+axis([7 566 .2 2])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator

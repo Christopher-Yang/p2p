@@ -1,11 +1,12 @@
-% rotate reach directions into quadrant 1 and plot histograms
-function plot_habitMLE(d)
+% fit mixture model to data and plot habitual behavior from flip block
 
+function plot_flip(data)
+
+% set variables for analysis
 rng(2);
-groups = fieldnames(d);
-graph_names = {'2-day','5-day','10-day'};
-Ngroup = length(groups);
-allSubj = [length(d.day2) length(d.day5) length(d.day10)];
+groups = fieldnames(data); % names of groups in data
+Ngroup = length(groups); % number of groups
+allSubj = [length(data.day2) length(data.day5) length(data.day10)]; % number of subjects in each group
 
 % indices for dividing up the trials into blocks
 trials{1} = 1:30;
@@ -24,33 +25,38 @@ col = [180 180 0
         0 191 255
         255 99 71]./255;
 
-clear target_gd target_hab dir_rot 
-
 % store all reach direction errors into dirError
 for i = 1:Ngroup
+
+    Ntrials = length(data.(groups{i}){1}.Cr);
+    Nsubj = length(data.(groups{i}));
+
+    % preallocate variables
     dir_rot{i} = NaN(100, allSubj(i), 4);
     target_gd{i} = NaN(100, 4);
     target_hab{i} = NaN(100, 4);
-
+    dir = NaN(Ntrials,Nsubj);
+    
+    % store data from all subjects in dir
+    for j = 1:Nsubj
+        dir(:,j) = data.(groups{i}){j}.initDir_noRot;
+    end
+    
     for k = 1:Nblock
-        Ntrials = length(d.(groups{i}){1}.Cr);
-        Nsubj = length(d.(groups{i}));
-        dir = NaN(Ntrials,Nsubj);
-        for j = 1:Nsubj
-            dir(:,j) = d.(groups{i}){j}.initDir_noRot;
-        end
 
+        % select data from single blocks
         dir2 = dir(trials{gblocks{i}(k)},:);
-        targ = d.(groups{i}){1}.targetRel(trials{gblocks{i}(k)},:);
         
-        dir2 = atan2(sin(dir2), cos(dir2));
-
+        % relative direction of each target
+        targ = data.(groups{i}){1}.targetRel(trials{gblocks{i}(k)},:);
+        
         if k == 1
             idx = 1:30;
         else
             idx = 1:100;
         end
         
+        % store data
         target_gd{i}(idx,k) = atan2(targ(:,2), targ(:,1));
         target_hab{i}(idx,k) = atan2(targ(:,2), -targ(:,1));
         dir_rot{i}(idx,:,k) = dir2;
@@ -58,77 +64,114 @@ for i = 1:Ngroup
 end
 
 %% perform MLE for von Mises model
+
+% probability density function of von Mises distribution
 vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa)));
 
+% initialize parameters for optimization
 weight1_init = 0.33;
 weight2_init = 0.33;
 kappa_init = 15;
 
+% inequalities for optimization
 A = [-1 0 0; 0 -1 0; 1 1 0; 0 0 1; 0 0 -1];
 b = [0 0 1 200 0]';
 
-for k = 1:4
-    for j = 1:Ngroup
-        for i = 1:allSubj(j)
-
+% optimization loop
+for k = 1:Nblock % loop over blocks
+    for j = 1:Ngroup % loop over groups
+        for i = 1:allSubj(j) % loop over subjects
+            
+            % indices of data which are not NaNs (rows 31-100 for baseline)
             idx = ~isnan(dir_rot{j}(:,i,k));
             
+            % optimization
             log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k), target_hab{j}(idx,k));
-            
             paramsInit = [weight1_init weight2_init kappa_init];
             [params_opt, neg_log_likelihood] = fmincon(log_likelihood, paramsInit, A, b);
             
+            % placeholder variables for fitted parameters
             weight1 = params_opt(1);
             weight2 = params_opt(2);
             kappa = params_opt(3);
             log_likelihood = -neg_log_likelihood;
             
+            % store data
             weight1_opt{j}(i,k) = weight1;
             weight2_opt{j}(i,k) = weight2;
             weight3_opt{j}(i,k) = 1 - weight1 - weight2;
-            mix_BIC{j}(i,k) = length(paramsInit) * log(sum(idx)) - 2 * log_likelihood;
+            mix_BIC{j}(i,k) = length(paramsInit) * log(sum(idx)) - 2 * log_likelihood; % calculate BIC
             
-            if k == 4
+            % classify each trial as goal-directed, habitual, or random
+            if k == 4 % for flip block
                 dat = dir_rot{j}(:,i,k);
+                
+                % PDF of fitted mixture model
                 mix1 = weight1 * vmPDF(dat, target_gd{j}(:,k), kappa);
                 mix2 = weight2 * vmPDF(dat, target_hab{j}(:,k), kappa);
                 mix3 = (1 - weight1 - weight2) * repelem(1/(2*pi), length(dat))';
                 total = mix1 + mix2 + mix3;
                 
-                Pr_gd = mix1 ./ total;
-                Pr_hab = mix2 ./ total;
-                Pr_rand = mix3 ./ total;
+                % compute responsibilities of each component
+                Pr_gd = mix1 ./ total; % responsibility of goal-directed
+                Pr_hab = mix2 ./ total; % responsibility of habitual
+                Pr_rand = mix3 ./ total; % responsibility of random
                 
+                % identify which component has most responsibility
+                % Pr_idx == 1: goal-directed
+                % Pr_idx == 2: habitual
+                % Pr_idx == 3: random
                 Pr_all = [Pr_gd Pr_hab Pr_rand];
                 [~, idx] = max(Pr_all, [], 2);
-                idx(isnan(dat)) = NaN;
-                
+                idx(isnan(dat)) = NaN;                
                 Pr_idx{j}(:,i) = idx;
             end
         end
     end
 end
 
-%% check whether there's extinction of habit in 1st vs 2nd half of flip block
-for k = 1:2
-    idx = (k-1)*50 + (1:50);
-    for j = 1:Ngroup
-        for i = 1:allSubj(j)            
+%% perform MLE for uniform model
+for k = 1:Nblock % loop over blocks
+    for j = 1:Ngroup % loop over groups
+        for i = 1:allSubj(j) % loop over subjects
             
-            log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,4), target_gd{j}(idx,4), target_hab{j}(idx,4));
+            % indices of data which are not NaNs (rows 31-100 for baseline)
+            idx = ~isnan(dir_rot{j}(:,i,k));
             
-            paramsInit = [weight1_init weight2_init kappa_init];
-            params_opt = fmincon(log_likelihood, paramsInit, A, b);
+            % optimization
+            log_likelihood = @(params) calc_likelihood_unif(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k));
+            weightInit = 0.8;
+            [weight_opt, neg_log_likelihood] = fmincon(log_likelihood, weightInit, [], [], [], [], 0, 1);
             
-            weight2 = params_opt(2);
+            log_likelihood = -neg_log_likelihood;
             
-            weight2_opt2{j}(i,k) = weight2;
+            % store fitted parameters and BIC
+            unifWeight{j}(i,k) = weight_opt;
+            unif_BIC{j}(i,k) = length(weightInit) * log(sum(idx)) - 2 * log_likelihood;
         end
     end
 end
 
-y = [weight2_opt2{1}(:); weight2_opt2{2}(:); weight2_opt2{3}(:)];
+%% check whether there's extinction of habit in 1st vs 2nd half of flip block
 
+for k = 1:2 % loop over first/second half of data
+    idx = (k-1)*50 + (1:50); % indices of first or second half of trials
+    for j = 1:Ngroup % loop over groups
+        for i = 1:allSubj(j) % loop over subjects
+            
+            % optimization
+            log_likelihood = @(params) calc_likelihood(params, dir_rot{j}(idx,i,4), target_gd{j}(idx,4), target_hab{j}(idx,4));            
+            paramsInit = [weight1_init weight2_init kappa_init];
+            params_opt = fmincon(log_likelihood, paramsInit, A, b);
+            
+            % store weight
+            weight2_opt_half{j}(i,k) = params_opt(2);
+        end
+    end
+end
+
+% store data for statistical analysis in R
+y = [weight2_opt_half{1}(:); weight2_opt_half{2}(:); weight2_opt_half{3}(:)];
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
 groupNames(55:64,1) = "10-day";
@@ -138,32 +181,9 @@ subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, half, subject, y, 'VariableNames', {'group','half','subject','habit'});
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
 
-%% perform MLE for uniform model
-for k = 1:Nblock
-    for j = 1:Ngroup
-        for i = 1:allSubj(j)
-            idx = ~isnan(dir_rot{j}(:,i,k));
-            
-            log_likelihood = @(params) calc_likelihood_unif(params, dir_rot{j}(idx,i,k), target_gd{j}(idx,k));
-            
-            weightInit = 0.8;
-            [weight_opt, neg_log_likelihood] = fmincon(log_likelihood, weightInit, [], [], [], [], 0, 1);
-            
-            log_likelihood = -neg_log_likelihood;
-            
-            unifWeight{j}(i,k) = weight_opt;
-            unif_BIC{j}(i,k) = length(weightInit) * log(sum(idx)) - 2 * log_likelihood;
-        end
-    end
-end
-
-for i = 1:Ngroup
-    weight2_frac{i} = weight2_opt{i} ./ (weight1_opt{i} + weight2_opt{i});
-end
 %% statistical comparison between von Mises and uniform model
 
 y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
-
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
 groupNames(55:64,1) = "10-day";
@@ -174,7 +194,7 @@ T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
 
 %% Figure 4D
-f = figure(4); clf;
+f = figure(12); clf;
 set(f,'Position',[200 200 350 150]);
 
 subplot(1,2,1); hold on
@@ -205,6 +225,7 @@ ylabel('\alpha_m')
 axis([0 8 0 1])
 set(gca,'TickDir','out')
 
+% save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habitMLE','-dpdf','-painters')
 
 % save data for analysis in R
@@ -230,51 +251,41 @@ writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight2.csv')
 
 %% Figure 4C
 
-times = 0:10:1000;
-
+% split reaction times by whether they were from goal-directed or habitual
+% reaches
+close = 0; % number of trials where target was less than 30 deg from y-axis
 for j = 1:Ngroup
+    
+    % indices of targets less than 30 deg from y-axis
+    idx1 = (target_gd{j}(:,4) < 2*pi/3) + (target_gd{j}(:,4) > pi/3) == 2;
+    idx2 = (target_gd{j}(:,4) < -pi/3) + (target_gd{j}(:,4) > -2*pi/3) == 2;
+    idx = logical(idx1 + idx2);
+    
+    close = close + sum(idx)*allSubj(j);
+    
     for i = 1:allSubj(j)
-        RT = d.(groups{j}){i}.RT(end-99:end);
         
-        RT_gd{j}(i) = mean(RT(Pr_idx{j}(:,i) == 1));
-        RT_hab{j}(i) = mean(RT(Pr_idx{j}(:,i) == 2));
+        RT = data.(groups{j}){i}.RT(end-99:end); % data from flip block
+        RT(idx) = NaN; % NaN out trials too close to y-axis
         
+        % divide data into goal-directed or habitual
+        RT_gd{j}(i) = mean(RT(Pr_idx{j}(:,i) == 1),'omitnan');
+        RT_hab{j}(i) = mean(RT(Pr_idx{j}(:,i) == 2),'omitnan');
+        
+        % store data from all trials
         RT_all{j}(:,i) = RT;
     end
-    
-    Nsubj = length(d.(groups{j}));
-    frac{j} = NaN(length(times),Nsubj);
-    
-    for i = 1:length(times)
-        high = RT_all{j} < times(i) + 100;
-        low = RT_all{j} > times(i);
-        bin = (high + low) == 2;        
-        total = sum(bin,1);
-        
-        if total > 5
-            habIdx = Pr_idx{j} == 2;
-            habitBin = (habIdx + bin) == 2;
-
-            frac{j}(i,:) = sum(habitBin,1)./total;
-        end
-    end
-
-    frac_mu{j} = mean(frac{j},2,'omitnan');
-    frac_se{j} = std(frac{j},[],2,'omitnan')./sqrt(sum(~isnan(frac{j}),2));
-
 end
 
-figure(8); clf; hold on
-for j = 1:Ngroup
-    s = shadedErrorBar(times+50,frac_mu{j},frac_se{j});
-    editErrorBar(s,col(j,:),1);
-end
-ylim([0 1])
-ylabel('P(habitual)')
-xlabel('Reaction time (ms)')
-legend(graph_names)
+% number of trials where RT couldn't be computed because velocity never
+% exceeded 0.1 m/s
+sumnans = sum(cellfun(@(x) sum(isnan(x),'all'), RT_all));
+bad = sumnans - close;
 
-f = figure(7); clf; hold on
+disp(['Trials where velocity did not exceed 0.1 m/s: ' num2str(bad) '/' num2str(sum(allSubj)*100)]) 
+disp(['Trials where target was within 30 degrees of mirroring axis: ' num2str(close) '/' num2str(sum(allSubj)*100)]) 
+
+f = figure(13); clf; hold on
 set(f,'Position',[200 200 150 130]);
 for j = 1:Ngroup
     plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), RT_gd{j}, '.', 'Color', col(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
@@ -284,23 +295,24 @@ for j = 1:Ngroup
     plot(j + 4, mean(RT_hab{j}), 'ko', 'MarkerFaceColor', col(j,:), 'MarkerSize', 6, 'LineWidth', 1)
 end
 xticks([2 6])
-xticklabels({'Actual', 'Mirrored'})
+xticklabels({'Goal-directed', 'Habitual'})
 xlim([0.5 7.5])
-yticks(300:300:900)
-ylim([200 1000])
-ylabel('Reaction time (ms)')
+yticks(0:2)
+ylim([0 2])
+ylabel('Reaction time (s)')
 set(gca,'Tickdir','out')
 
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habit_kinematics','-dpdf','-painters')
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habit_RT','-dpdf','-painters')
 
 %% Figure 4E
-f = figure(10); clf; hold on
+f = figure(14); clf; hold on
 set(f,'Position',[200 200 140 130]);
 for i = 1:3
-    plot(1:2, weight2_opt2{i}','Color',[col(i,:) 0.5],'HandleVisibility','off')
+    plot(1:2, weight2_opt_half{i}','Color',[col(i,:) 0.5],'HandleVisibility','off')
 end
 for i = 1:3
-    plot(1:2, mean(weight2_opt2{i}),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'MarkerSize',6,'LineWidth',1)
+    plot(1:2, mean(weight2_opt_half{i}),'-o','Color',col(i,:),'MarkerFaceColor',col(i,:),'MarkerSize',6,'LineWidth',1)
 end
 set(gca,'TickDir','out')
 xlim([0.75 2.25])
@@ -308,11 +320,12 @@ xticks([1 2])
 xticklabels({'first half','second half'})
 ylabel({'Weight'})
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/p2p_half','-dpdf','-painters')
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/p2p_half','-dpdf','-painters')
 
 %% Figure S2B
 
-f = figure(20); clf; hold on
+f = figure(15); clf; hold on
 set(f,'Position',[200 200 200 150]);
 for i = 1:Ngroup
     plot(0.5*(rand(allSubj(i),1) - 0.5) + i, mix_BIC{i}(:,4), '.', 'Color', col(i,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
@@ -328,10 +341,12 @@ ylim([150 400])
 ylabel('BIC')
 set(gca,'Tickdir','out')
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/BIC','-dpdf','-painters')
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/BIC','-dpdf','-painters')
 
 end
 
+% calculate likelihood for von Mises mixture model
 function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
     
@@ -346,6 +361,7 @@ function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target
     neg_log_likelihood = -sum(log(likelihood_all));
 end
 
+% calculate likelihood for uniform mixture model
 function neg_log_likelihood = calc_likelihood_unif(weight, samples, target_gd)
     
     unifPDF = 1/pi;

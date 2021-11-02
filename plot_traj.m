@@ -1,6 +1,6 @@
-function plot_traj(data)
+% plots raw trajectories
 
-% plot 10 reaches from baseline, early, and late learning
+function plot_traj(data)
 
 % set variables for plotting
 subj = [2 6 1]; % select which participants to plot from each group
@@ -45,13 +45,14 @@ for k = 1:Ngroup % loop over groups
         end
     end
 end
+
+% save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj','-dpdf','-painters')
 
 %% Figure 4A
 
 % set variables for plotting
-delay = 20; % time after movement initiation when velocity is computed
-trialIdx = 2875; % trial to be plotted
+trial = 2875; % trial to be plotted
 axisLims = [0.5 0.8 0.1 0.4]; % set axes for plots
 
 % generate plot
@@ -66,12 +67,11 @@ for i = 1:2 % loop to generate plot for toward or away trial
     end
     
     % set variables
-    trial = trialIdx; % trial to be plotted
     targ = a.targetAbs(trial-1:trial,:); % target trajectory
     curs = a.C{trial}; % cursor trajectory
     
     % compute line to plot initial reach direction
-    init = a.init(trial)+delay; % index of cursor position 150 ms after movement initiation
+    init = a.iDir(trial); % index of cursor position 150 ms after movement initiation
     vel = diff(curs); % compute velocity (not divided by time because only the direction is needed)
     vel = vel(init,:);
     angle = atan2(vel(2),vel(1)); % find direction of velocity vector
@@ -93,7 +93,9 @@ for i = 1:2 % loop to generate plot for toward or away trial
         plot([0.6 0.72],[0.15 0.15],'k','LineWidth',4)
     end
 end
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
+
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
 
 %% Figure 4F
 trial = 2896; % trial to be plotted
@@ -103,13 +105,13 @@ targ = a.targetAbs(trial-1:trial,:); % target positions
 vel = diff(curs); % velocity (not divided by time because only the direction is needed)
 
 % compute line to plot initial reach direction
-init = a.init(trial) + delay;
+init = a.iDir(trial);
 initVel = vel(init,:);
 angle = atan2(initVel(2),initVel(1)); % find direction of velocity vector
 vector = 0.03*[cos(angle) sin(angle)]; % scale vector
 
 % initial reach direction based on x-axis movements
-init_x = a.init_x(trial) + delay;
+init_x = a.iDir_x(trial);
 initVel_x = vel(init_x,:);
 angle = atan2(initVel_x(2),initVel_x(1)); % find direction of velocity vector
 vector_x = 0.03*[cos(angle) sin(angle)]; % scale vector
@@ -120,13 +122,15 @@ plot([targ(1,1) targ(1,1)], [targ(1,2)-0.15 targ(1,2)+0.15], 'k--', 'LineWidth',
 plot([curs(init,1) curs(init,1)+vector(1)], [curs(init,2) curs(init,2)+vector(2)], 'Color', col(3,:), 'LineWidth',4) % instantaneous velocity vector
 plot([curs(init_x,1) curs(init_x,1)+vector_x(1)], [curs(init_x,2) curs(init_x,2)+vector_x(2)], 'Color', col(4,:), 'LineWidth',4) % instantaneous horizontal velocity
 plot(targ(1,1), targ(1,2), '.', 'Color', [0.6 0.6 0.6], 'MarkerSize', 35) % starting target
-plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target    
+plot(targ(2,1), targ(2,2), '.', 'Color', [1 0.4 0.4], 'MarkerSize', 35) % ending target
+plot(targ(2,1) - 2*(targ(2,1) - targ(1,1)), targ(2,2), 'o', 'Color', [1 0.4 0.4], 'MarkerSize', 10) % mirrored target
 plot(a.C{trial}(:,1),a.C{trial}(:,2),'k') % plot cursor
 axis([0.55 0.7 0.2 0.35])
 axis square
 xticks([])
 yticks([])
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit2','-dpdf','-painters')
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit2','-dpdf','-painters')
 
 end

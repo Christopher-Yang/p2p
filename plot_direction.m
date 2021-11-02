@@ -1,13 +1,15 @@
+% fits mixture model to data and plots initial reach direction error
+
 function plot_direction(data)
 
 % set variables for analysis
 rng(2);
-groups = fieldnames(data);
-graph_names = {'2-day','5-day','10-day'};
-blocks = {'Baseline','Early','Late'};
-Ngroup = length(groups);
-Nblock = length(blocks);
-allSubj = [length(data.day2) length(data.day5) length(data.day10)];
+groups = fieldnames(data); % names of groups in data
+graph_names = {'2-day','5-day','10-day'}; % names of groups for plotting
+blocks = {'Baseline','Early','Late'}; % block names
+Ngroup = length(groups); % number of groups
+Nblock = length(blocks); % number of blocks
+allSubj = [length(data.day2) length(data.day5) length(data.day10)]; % number of subjects in each group
 
 % indices for dividing up the trials into blocks
 trials{1} = 1:30;
@@ -40,11 +42,11 @@ end
 %% fit mixture model for each participant
 
 % set values for initial parameters for optimization
-muInit = 0;
-kappaInit = 1;
-weightInit = 0.9;
+muInit = 0; % mean of von Mises distribution
+kappaInit = 1; % concentration parameter of von Mises
+weightInit = 0.9; % relative weight of von Mises and uniform distributions
 
-% blocks fo analyze
+% blocks to analyze
 gblocks2{1} = 1:5;
 gblocks2{2} = 1:14;
 gblocks2{3} = 1:29;
@@ -55,58 +57,44 @@ kappa_opt = NaN(Nblock,Ngroup,max(allSubj));
 weight_opt = NaN(Nblock,Ngroup,max(allSubj));
 sd = NaN(length(gblocks2{3}),Ngroup,max(allSubj));
 
-% main loop for EM
-for k = 1:Ngroup
-    Nsubj = length(data.(groups{k}));
-    for m = 1:Nsubj
-        Nblock = length(gblocks2{k});
-        for j = 1:Nblock
+% maximum likelihood estimation for mixture model
+for k = 1:Ngroup % loop over groups
+    Nsubj = length(data.(groups{k})); % number of subjects in each group
+    for m = 1:Nsubj % loop over subjects
+        Nblock = length(gblocks2{k}); % number of blocks
+        for j = 1:Nblock % loop over blocks
             
             % select trials to analyze and store in samples
             trial = trials{gblocks2{k}(j)};
             samples = dirError{k}(trial,m)*pi/180; % convert error to radians
             samples = samples(~isnan(samples));
             
-            % initialize mu and kappa for the VM distribution and the
-            % relative weight between the VM and uniform distributions
-            mu = muInit;
-            kappa = kappaInit;
-            weight = weightInit;
-            
+            % fit model
             log_likelihood = @(params) calc_likelihood(params, samples);
-            paramsInit = [mu kappa weight]; % set parameters to current values of mu and kappa
+            paramsInit = [muInit kappaInit weightInit]; % set parameters to current values of mu and kappa
             params_opt = fmincon(log_likelihood, paramsInit, [], [], [], [], [-pi 0 0], [pi 200 1]);
-            mu = params_opt(1);
-            kappa = params_opt(2);
-            weight = params_opt(3);
             
             % store fitted parameter values
-            mu_opt(j,k,m) = mu;
-            kappa_opt(j,k,m) = kappa;
-            weight_opt(j,k,m) = weight;
+            mu_opt(j,k,m) = params_opt(1);
+            kappa_opt(j,k,m) = params_opt(2);
+            weight_opt(j,k,m) = params_opt(3);
             
             % compute circular standard deviation
-            R = besseli(1,kappa)/besseli(0,kappa);
+            R = besseli(1,params_opt(2))/besseli(0,params_opt(2));
             sd(j,k,m) = sqrt(-2 * log(R)); % circular standard deviation
         end
     end
 end
 
-vmFit.mu_opt = mu_opt;
-vmFit.kappa_opt = kappa_opt;
-vmFit.weight_opt = weight_opt;
-vmFit.sd = sd;
-
-% save('variables/vmFit.mat','vmFit')
-
 % mean and standard deviation of the circular standard deviation
 sd_mu = nanmean(sd,3);
 sd_se = nanstd(sd,[],3)./sqrt(repmat(allSubj,[size(sd,1) 1]));
 
-sd2 = permute(sd,[1 3 2]);
-
+% make vector of standard deviations for stats in R
+sd2 = permute(sd,[1 3 2]); % rearrange sd to make it easier to add to y
 y = [sd2(3,1:13,1)'; sd2(5,1:13,1)'; sd2(5,:,2)'; sd2(14,:,2)'; sd2(14,1:5,3)'; sd2(29,1:5,3)']*180/pi;
 
+% labels data points in y to create R data frame
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
 groupNames(55:64,1) = "10-day";
@@ -117,7 +105,8 @@ T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block',
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')
 
 %% Figure 4F
-f = figure(1); clf
+
+f = figure(8); clf
 set(f,'Position',[200 200 500 140]);
 for i = 1:Ngroup
     for j = 1:3
@@ -149,14 +138,12 @@ end
 order = [3 2 1];
 Nday = [2 5 10];
 
-f = figure(2); clf; hold on
+f = figure(9); clf; hold on
 set(f,'Position',[200 200 140 140]);
 for i = 1:Ngroup
     o = order(i);
     for j = 1:Nday(o)
         if j == 1
-%             s = shadedErrorBar([-1 1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, [sd_se(1,o) sd_se(1,o)]*180/pi);
-%             editErrorBar(s,col(o,:),0.5);
             plot([2 3*Nday(o)-1], [sd_mu(1,o) sd_mu(1,o)]*180/pi, 'Color', col(o,:), 'LineWidth', 1)
             
             idx = 2:3;
@@ -166,12 +153,12 @@ for i = 1:Ngroup
             idx = (j-1)*3 + (1:3);
         end
         
+        if i == 1
+            plot([idx(1)-0.5; idx(1)-0.5],[0 60],'Color',[0.8 0.8 0.8])
+        end
+        
         s = shadedErrorBar(idx, sd_mu(idx,o)*180/pi, sd_se(idx,o)*180/pi);
         editErrorBar(s,col(o,:),0.5);
-        
-%         if o == 3 && j > 1
-%             plot([idx(1)-0.5 idx(1)-0.5], [0 60], 'k')
-%         end
     end
 end
 set(gca,'TickDir','out')
@@ -183,7 +170,7 @@ xlim([2 29])
 yticks(0:15:60)
 
 % save figure for Illustrator
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
 
 %% check fits of mixture model; can uncomment to generate plots
 % subj = 1; % choose which subject to plot fits for

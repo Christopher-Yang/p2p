@@ -3,7 +3,10 @@
 % main.m generates plots for Figures 2, 4, and S2.
 % 
 % Part 1 loads raw data from the point-to-point task and performs initial
-% data analysis. Part 2 performs follow-up data analysis and plots figures.
+% data analysis, storing the data in a structure called "data". This
+% structure or organizes as follows: data.(group){subject}. See processData
+% for more details on subfields in "data". Part 2 performs follow-up data 
+% analysis and plots figures.
 % 
 % All analyses can be performed by running main.m
 
@@ -14,8 +17,8 @@ clear
 % path to data for each group
 path = {'Data/denovo_2day/','Data/denovo_5day/','Data/denovo_10day/'};
 
-% select names of subjects to be analyzed; names{1}: 2-day group, names{2}:
-% 5-day group, names{3}: 10-day group
+% select names of subjects to be analyzed; names{1}: 2-day group; names{2}:
+% 5-day group; names{3}: 10-day group
 names{1} = {'subj1','subj3','subj4','subj5','subj6','subj7','subj8','subj9','subj10','subj11','subj12','subj13','subj14'};
 names{2} = {'subj13','subj15','subj17','subj18','subj19','subj21','subj22','subj23','subj24','subj25','subj26','subj27','subj28','subj29'};
 names{3} = {'subj1','subj2','subj3','subj4','subj5'};
@@ -75,11 +78,14 @@ plot_direction(data)
 % plot Figure 4B and S2A
 plot_heatmap(data)
 
-% plot Figure 4D-E and S2B
-plot_habitMLE(data)
+% plot Figure 4C-E and S2B
+plot_flip(data)
 
 % plot Figure 4G
-plot_habit(data)
+plot_away(data)
 
-% plot Figure S2C
-modelRecovery
+% plot Figure S2C; set loadAccuracy = 1 if you want to use precomputed
+% accuracy matrix; to compute accuracy matrix from scratch, set
+% loadAccuracy = 0, which will take about 15 mins to run
+loadAccuracy = 1;
+modelRecovery(loadAccuracy)

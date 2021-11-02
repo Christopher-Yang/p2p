@@ -1,3 +1,5 @@
+% plots initial reach directions in a heatmap
+
 function plot_heatmap(data)
 
 % set variables for plotting
@@ -59,7 +61,7 @@ end
 %% Figure 4B
 n = length(bins)-1;
 clims = [0 1];
-figure(1); clf
+figure(10); clf
 for j = 1:Ngroup
     for k = 1:4
         
@@ -100,7 +102,7 @@ end
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/flip_direction','-dpdf','-painters')
 
 %% Figure S2A
-f = figure(2); clf
+f = figure(11); clf
 set(f,'Position',[200 200 300 150]);
 for i = 1:2
     

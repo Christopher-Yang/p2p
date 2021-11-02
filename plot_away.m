@@ -1,34 +1,41 @@
-function plot_habit(d)
+% plots proportion of trials where intial horizontal reach direction was
+% aimed away from the target
 
-% organize data into easily plottable variables
+function plot_away(data)
+
+% set variables for analysis
 groups = {'day2','day5','day10'};
-Nsubj = [length(d.day2) length(d.day5) length(d.day10)];
+Nsubj = [length(data.day2) length(data.day5) length(data.day10)];
 Ngroup = length(groups);
 
+% indices of trials from each block
 trials{1} = 1:30;
 for i = 1:29
     trials{i+1} = (i-1)*100 + 31:(i-1)*100 + 130;
 end
 
+% blocks to be analyzed
 gblocks = [1 2 5 6
           1 2 14 15
           1 2 29 30];
       
 Nblock = size(gblocks,2);
 
+% compute number of trials where cursor moved horizontally away from target
 for i = 1:Ngroup
     for j = 1:Nblock
         for k = 1:Nsubj(i)
-            trialIdx = trials{gblocks(i,j)};
+            trialIdx = trials{gblocks(i,j)}; % index of trial to be analyzed
+            a = data.(groups{i}){k}.away(trialIdx);
             
-            a = d.(groups{i}){k}.incorrectReach_x(trialIdx);
-            num.(groups{i})(k,j) = nansum(a);
-            den.(groups{i})(k,j) = 100-sum(isnan(a));
+            num.(groups{i})(k,j) = nansum(a); % number of reaches away from target
+            den.(groups{i})(k,j) = 100-sum(isnan(a)); % total number of reaches
             habit.(groups{i})(k,j) = 100*num.(groups{i})(k,j)/den.(groups{i})(k,j);
         end
     end
 end
 
+% store data for analysis in R
 x = [reshape(habit.day2(:,3:end), [numel(habit.day2(:,3:end)) 1]); ...
     reshape(habit.day5(:,3:end), [numel(habit.day5(:,3:end)) 1]); ...
     reshape(habit.day10(:,3:end), [numel(habit.day10(:,3:end)) 1])];
@@ -48,7 +55,7 @@ col = [180 180 0
        0 191 255
        255 99 71]./255;
 
-rng(34);
+rng(16);
 f = figure(1); clf
 set(f,'Position',[200 200 140 150]); hold on
 
@@ -66,6 +73,7 @@ for i = 1:Ngroup
     end
 end
 
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/away','-dpdf','-painters')
+% save figure for Illustrator
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/away','-dpdf','-painters')
 
 end
