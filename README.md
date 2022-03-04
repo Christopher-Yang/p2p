@@ -19,7 +19,7 @@ following:
       columns 1-2: left hand x/y position
       columns 3-4: right hand x/y position
       columns 5-6: cursor x/y position
-      column 7: state of the experiment
+      column 7: state of the experiment, represented as a number
             7: hold period before go cue
 	    3: time between target presentation and cursor leaving start circle
       	    4: reach epoch

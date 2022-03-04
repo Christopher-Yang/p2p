@@ -94,7 +94,7 @@ sd_se = nanstd(sd,[],3)./sqrt(repmat(allSubj,[size(sd,1) 1]));
 sd2 = permute(sd,[1 3 2]); % rearrange sd to make it easier to add to y
 y = [sd2(3,1:13,1)'; sd2(5,1:13,1)'; sd2(5,:,2)'; sd2(14,:,2)'; sd2(14,1:5,3)'; sd2(29,1:5,3)']*180/pi;
 
-% labels data points in y to create R data frame
+% write data for analysis in R
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
 groupNames(55:64,1) = "10-day";
@@ -104,7 +104,7 @@ subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','sd'});
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')
 
-%% Figure 4F
+%% Figure 4B
 
 f = figure(8); clf
 set(f,'Position',[200 200 500 140]);
@@ -133,7 +133,7 @@ end
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/ksdensity','-dpdf','-painters')
 
-%% Figure 4G
+%% Figure 4C
 
 order = [3 2 1];
 Nday = [2 5 10];
@@ -170,14 +170,14 @@ xlim([2 29])
 yticks(0:15:60)
 
 % save figure for Illustrator
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-painters')
 
 %% check fits of mixture model; can uncomment to generate plots
 % subj = 1; % choose which subject to plot fits for
 % Nblock = 3; % choose block for plotting
 % 
-% parameters for plotting von Mises distribution
-% delt = pi/64; % interval for plotting PDF
+% % parameters for plotting von Mises distribution
+% delt = pi/32; % interval for plotting PDF
 % x = -pi:delt:pi-delt; % vector of points to plot PDF
 % vmPDF = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
 % 
@@ -192,21 +192,28 @@ print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/st_dev','-dpdf','-pai
 %         % plot histograms
 %         if subj <= Nsubj
 %             trial = trials{idx};
-%             histogram(dirError{k}(trial,subj),x*180/pi,'Normalization','probability');
+%             histogram(dirError{k}(trial,subj)*pi/180,x,'Normalization','pdf');
 %         end
 %         
 %         % plot pdf
 %         pdf = vmPDF(x, mu_opt(idx,k,subj), kappa_opt(idx,k,subj)); % PDF of von Mises distribution
 %         mixPDF = weight_opt(idx,k,subj) * pdf + (1-weight_opt(idx,k,subj)) * (1 / (2*pi)); % weight von Mises with uniform distribution
-%         plot(x*180/pi, mixPDF./sum(mixPDF), 'LineWidth', 2)
+%         plot(x, mixPDF, 'LineWidth', 2)
 %         if j == 1
 %             title(graph_names{k})
+%             if k == 1
+%                 ylabel('Baseline')
+%             end
 %         elseif j == 2 && k == 1
-%             ylabel('Probability')
-%         elseif j == 3 && k == 2
-%             xlabel('Reach Direction Error (degrees)')
+%             ylabel('Early learning')
+%         elseif j == 3 
+%             if k == 1
+%                 ylabel('Late learning')
+%             elseif k == 2
+%                 xlabel('Reach direction error (degrees)')
+%             end
 %         end
-%         axis([-180 180 0 0.3])
+%         axis([-pi pi 0 5])
 %     end
 % end
 

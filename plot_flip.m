@@ -130,6 +130,9 @@ for k = 1:Nblock % loop over blocks
     end
 end
 
+% save weights for analysis with tracking code
+% save weight2_opt weight2_opt
+
 %% perform MLE for uniform model
 for k = 1:Nblock % loop over blocks
     for j = 1:Ngroup % loop over groups
@@ -151,6 +154,17 @@ for k = 1:Nblock % loop over blocks
         end
     end
 end
+
+% statistical comparison between von Mises and uniform model
+% y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
+% groupNames(1:26,1) = "2-day";
+% groupNames(27:54,1) = "5-day";
+% groupNames(55:64,1) = "10-day";
+% modelType([1:13 27:40 55:59],1) = "unif";
+% modelType([14:26 41:54 60:64],1) = "vm";
+% subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+% T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','subject','bic'});
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
 
 %% check whether there's extinction of habit in 1st vs 2nd half of flip block
 
@@ -181,19 +195,7 @@ subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, half, subject, y, 'VariableNames', {'group','half','subject','habit'});
 writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
 
-%% statistical comparison between von Mises and uniform model
-
-y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
-groupNames(1:26,1) = "2-day";
-groupNames(27:54,1) = "5-day";
-groupNames(55:64,1) = "10-day";
-modelType([1:13 27:40 55:59],1) = "unif";
-modelType([14:26 41:54 60:64],1) = "vm";
-subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
-T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','subject','bic'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
-
-%% Figure 4D
+%% Figure 4C
 f = figure(12); clf;
 set(f,'Position',[200 200 350 150]);
 
@@ -240,16 +242,9 @@ blockNames([1:13 27:40 55:59],1) = "Late";
 blockNames([14:26 41:54 60:64],1) = "Flip";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight1.csv')
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
 
-z = [];
-for i = 1:3
-    z = [z; reshape(weight1_opt{i}(:,3:4), [allSubj(i)*2 1])];
-end
-T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight2.csv')
-
-%% Figure 4C
+%% Figure 4D
 
 % split reaction times by whether they were from goal-directed or habitual
 % reaches
@@ -305,6 +300,16 @@ set(gca,'Tickdir','out')
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habit_RT','-dpdf','-painters')
 
+y = [RT_gd{1}'; RT_hab{1}'; RT_gd{2}'; RT_hab{2}'; RT_gd{3}'; RT_hab{3}'];
+groupNames(1:26,1) = "2-day";
+groupNames(27:54,1) = "5-day";
+groupNames(55:64,1) = "10-day";
+reach([1:13 27:40 55:59],1) = "gd";
+reach([14:26 41:54 60:64],1) = "habit";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+T = table(groupNames, reach, subject, y, 'VariableNames', {'group','reach','subject','RT'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+
 %% Figure 4E
 f = figure(14); clf; hold on
 set(f,'Position',[200 200 140 130]);
@@ -323,7 +328,7 @@ ylabel({'Weight'})
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/p2p_half','-dpdf','-painters')
 
-%% Figure S2B
+%% Supplementary Figure 3B
 
 f = figure(15); clf; hold on
 set(f,'Position',[200 200 200 150]);
@@ -346,6 +351,7 @@ set(gca,'Tickdir','out')
 
 end
 
+%% functions for calculating likelihoods
 % calculate likelihood for von Mises mixture model
 function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution

@@ -97,7 +97,7 @@ end
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/traj_habit','-dpdf','-painters')
 
-%% Figure 4F
+%% Supplementary Figure 4A
 trial = 2896; % trial to be plotted
 a = data.day10{2};
 curs = a.C{trial}; % cursor trajectory

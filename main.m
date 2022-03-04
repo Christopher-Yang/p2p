@@ -4,7 +4,7 @@
 % 
 % Part 1 loads raw data from the point-to-point task and performs initial
 % data analysis, storing the data in a structure called "data". This
-% structure or organizes as follows: data.(group){subject}. See processData
+% structure is organized as follows: data.(group){subject}. See processData
 % for more details on subfields in "data". Part 2 performs follow-up data 
 % analysis and plots figures.
 % 
@@ -66,26 +66,29 @@ disp('All Done')
 
 %% PART 2: FOLLOW-UP DATA ANALYSIS AND PLOTTING FIGURES
 
-% plot Figure 2A, 4A, and 4F
+% plot Figure 2A, 4A, and Supplementary Figure 4A
 plot_traj(data)
 
-% plot Figure 2B-E
-plot_kinematics(data)
-
-% plot Figure 2F-G
+% plot Figure 2B-C
 plot_direction(data)
 
-% plot Figure 4B and S2A
+% plot Figure 4B and Supplementary Figure 3A
 plot_heatmap(data)
 
-% plot Figure 4C-E and S2B
+% plot Figure 4C-E and Supplementary Figure 3B
 plot_flip(data)
 
-% plot Figure 4G
-plot_away(data)
+% plot Supplementary Figure 1
+plot_kinematics(data)
 
-% plot Figure S2C; set loadAccuracy = 1 if you want to use precomputed
-% accuracy matrix; to compute accuracy matrix from scratch, set
-% loadAccuracy = 0, which will take about 15 mins to run
+% plot Supplementary Figure 3C
+% 
+% set loadAccuracy = 1 if you want to use precomputed accuracy matrix
+% 
+% to compute accuracy matrix from scratch, set loadAccuracy = 0, which will
+% take about 15 mins to run
 loadAccuracy = 1;
 modelRecovery(loadAccuracy)
+
+% plot Supplementary Figure 4B
+plot_away(data)
