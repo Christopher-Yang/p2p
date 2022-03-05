@@ -1,6 +1,7 @@
 % This file is associated with the article "Emergence of habitual control
 % in a novel motor skill over multiple days of practice". Running
-% main.m generates plots for Figures 2, 4, and S2.
+% main.m generates plots for Figures 2 and 4 as well as Supplementary
+% Figures 1, 3 and 4.
 % 
 % Part 1 loads raw data from the point-to-point task and performs initial
 % data analysis, storing the data in a structure called "data". This
