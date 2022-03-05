@@ -105,19 +105,15 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
 % write data table for analysis in R
-% 
-% % vector of data for statistical analysis in R
-% y = [mean(pkVel{1}(31:130,:))'; mean(pkVel{2}(331:430,:))'; mean(pkVel{3}(1231:1330,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
-% 
-% % labels data points in y to create R data frame
-% groupNames([1:13 33:45],1) = "2-day";
-% groupNames([14:27 46:59],1) = "5-day";
-% groupNames([28:32 60:64],1) = "10-day";
-% blockNames(1:32,1) = "before";
-% blockNames(33:64,1) = "after";
-% subject = [1:32 1:32]';
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
+y = [mean(pkVel{1}(31:130,:))'; mean(pkVel{2}(331:430,:))'; mean(pkVel{3}(1231:1330,:))'; mean(pkVel{1}(end-199:end-100,:))'; mean(pkVel{2}(end-199:end-100,:))'; mean(pkVel{3}(end-199:end-100,:))'];
+groupNames([1:13 33:45],1) = "2-day";
+groupNames([14:27 46:59],1) = "5-day";
+groupNames([28:32 60:64],1) = "10-day";
+blockNames(1:32,1) = "before";
+blockNames(33:64,1) = "after";
+subject = [1:32 1:32]';
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','pkVel'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/pkVel.csv')
 
 %% Supplementary Figure 1B
 
@@ -166,9 +162,9 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
 % write data table for analysis in R
-% y = [mean(pLength{1}(31:130,:))'; mean(pLength{2}(331:430,:))'; mean(pLength{3}(1231:1330,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
+y = [mean(pLength{1}(31:130,:))'; mean(pLength{2}(331:430,:))'; mean(pLength{3}(1231:1330,:))'; mean(pLength{1}(end-199:end-100,:))'; mean(pLength{2}(end-199:end-100,:))'; mean(pLength{3}(end-199:end-100,:))'];
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','plength'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/path_length.csv')
 
 %% Supplementary Figure 1C
 f = figure(6); clf; hold on
@@ -216,9 +212,9 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
 % write data table for analysis in R
-% y = [mean(movtime{1}(31:130,:))'; mean(movtime{2}(331:430,:))'; mean(movtime{3}(1231:1330,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
+y = [mean(movtime{1}(31:130,:))'; mean(movtime{2}(331:430,:))'; mean(movtime{3}(1231:1330,:))'; mean(movtime{1}(end-199:end-100,:))'; mean(movtime{2}(end-199:end-100,:))'; mean(movtime{3}(end-199:end-100,:))'];
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','movtime'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/movtime.csv')
 
 %% Supplementary Figure 1D
 f = figure(7); clf; hold on 
@@ -267,8 +263,8 @@ set(gca,'TickDir','out')
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
 % write data table for analysis in R
-% y = [mean(RT{1}(31:130,:))'; mean(RT{2}(331:430,:))'; mean(RT{3}(1231:1330,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
-% T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+y = [mean(RT{1}(31:130,:))'; mean(RT{2}(331:430,:))'; mean(RT{3}(1231:1330,:))'; mean(RT{1}(end-199:end-100,:))'; mean(RT{2}(end-199:end-100,:))'; mean(RT{3}(end-199:end-100,:))'];
+T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','RT'});
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 end

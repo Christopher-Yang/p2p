@@ -12,7 +12,7 @@
 
 %% PART 1: INITIAL DATA  ANALYSIS
 
-clear
+clear all
 
 % path to data for each group
 path = {'Data/denovo_2day/','Data/denovo_5day/','Data/denovo_10day/'};
