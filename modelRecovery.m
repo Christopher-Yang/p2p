@@ -1,4 +1,4 @@
-% performs model recovery analysis
+% performs model recovery/comparison analysis
 
 function modelRecovery(loadAccuracy)
 
@@ -121,9 +121,8 @@ x = x(:);
 y = repmat(w2,[length(w1) 1 length(kappa)]);
 y = y(:);
 
-% col = [accuracy(:) zeros(length(x), 2)];
-
-f = figure(17); clf
+%% Supplementary Figure 3C
+f = figure(16); clf
 set(f,'Position',[200 200 200 150]);
 scatter(x,y,13,accuracy(:),'filled')
 colormap(copper)
@@ -142,6 +141,7 @@ set(gca,'TickDir','out')
 
 end
 
+% functions for computing likelihood
 function neg_log_likelihood = calc_likelihood(params, samples, target_gd, target_hab)
     pdf = @(x, mu, kappa) (exp(kappa*cos(x-mu)) / (2 * pi * besseli(0,kappa))); % PDF of von Mises distribution
     

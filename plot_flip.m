@@ -155,17 +155,6 @@ for k = 1:Nblock % loop over blocks
     end
 end
 
-% statistical comparison between von Mises and uniform model
-% y = [unif_BIC{1}(:,4); mix_BIC{1}(:,4); unif_BIC{2}(:,4); mix_BIC{2}(:,4); unif_BIC{3}(:,4); mix_BIC{3}(:,4)];
-% groupNames(1:26,1) = "2-day";
-% groupNames(27:54,1) = "5-day";
-% groupNames(55:64,1) = "10-day";
-% modelType([1:13 27:40 55:59],1) = "unif";
-% modelType([14:26 41:54 60:64],1) = "vm";
-% subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
-% T = table(groupNames, modelType, subject, y, 'VariableNames', {'group','model','subject','bic'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habitBIC.csv')
-
 %% check whether there's extinction of habit in 1st vs 2nd half of flip block
 
 for k = 1:2 % loop over first/second half of data
@@ -193,10 +182,10 @@ half([1:13 27:40 55:59],1) = "first";
 half([14:26 41:54 60:64],1) = "second";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, half, subject, y, 'VariableNames', {'group','half','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
 
 %% Figure 4C
-f = figure(12); clf;
+f = figure(8); clf;
 set(f,'Position',[200 200 350 150]);
 
 subplot(1,2,1); hold on
@@ -242,7 +231,7 @@ blockNames([1:13 27:40 55:59],1) = "Late";
 blockNames([14:26 41:54 60:64],1) = "Flip";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
 
 %% Figure 4D
 
@@ -280,7 +269,7 @@ bad = sumnans - close;
 disp(['Trials where velocity did not exceed 0.1 m/s: ' num2str(bad) '/' num2str(sum(allSubj)*100)]) 
 disp(['Trials where target was within 30 degrees of mirroring axis: ' num2str(close) '/' num2str(sum(allSubj)*100)]) 
 
-f = figure(13); clf; hold on
+f = figure(9); clf; hold on
 set(f,'Position',[200 200 150 130]);
 for j = 1:Ngroup
     plot(j + 0.5 * (rand(allSubj(j),1) - 0.5), RT_gd{j}, '.', 'Color', col(j,:), 'MarkerSize', 12, 'HandleVisibility', 'off')
@@ -308,10 +297,10 @@ reach([1:13 27:40 55:59],1) = "gd";
 reach([14:26 41:54 60:64],1) = "habit";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, reach, subject, y, 'VariableNames', {'group','reach','subject','RT'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 %% Figure 4E
-f = figure(14); clf; hold on
+f = figure(10); clf; hold on
 set(f,'Position',[200 200 140 130]);
 for i = 1:3
     plot(1:2, weight2_opt_half{i}','Color',[col(i,:) 0.5],'HandleVisibility','off')
@@ -330,7 +319,7 @@ ylabel({'Weight'})
 
 %% Supplementary Figure 3B
 
-f = figure(15); clf; hold on
+f = figure(11); clf; hold on
 set(f,'Position',[200 200 200 150]);
 for i = 1:Ngroup
     plot(0.5*(rand(allSubj(i),1) - 0.5) + i, mix_BIC{i}(:,4), '.', 'Color', col(i,:), 'MarkerSize', 12, 'HandleVisibility', 'off')

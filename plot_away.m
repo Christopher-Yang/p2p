@@ -47,7 +47,7 @@ blockNames([1:13 27:40 55:59],1) = "late";
 blockNames([14:26 41:54 60:64],1) = "flip";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, x, 'VariableNames', {'group','block','subject','away'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
 
 %% Figure 4G
 
@@ -56,7 +56,7 @@ col = [180 180 0
        255 99 71]./255;
 
 rng(16);
-f = figure(1); clf
+f = figure(17); clf
 set(f,'Position',[200 200 140 150]); hold on
 
 for i = 1:Ngroup

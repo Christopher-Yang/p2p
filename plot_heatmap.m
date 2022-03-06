@@ -61,7 +61,7 @@ end
 %% Figure 4B
 n = length(bins)-1;
 clims = [0 1];
-figure(10); clf
+figure(6); clf
 for j = 1:Ngroup
     for k = 1:4
         
@@ -102,7 +102,7 @@ end
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/flip_direction','-dpdf','-painters')
 
 %% Supplementary Figure 3A
-f = figure(11); clf
+f = figure(7); clf
 set(f,'Position',[200 200 300 150]);
 for i = 1:2
     

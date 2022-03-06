@@ -102,11 +102,11 @@ blockNames([1:13 27:40 55:59],1) = "before";
 blockNames([14:26 41:54 60:64],1) = "after";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
 T = table(groupNames, blockNames, subject, y, 'VariableNames', {'group','block','subject','sd'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/sd.csv')
 
 %% Figure 4B
 
-f = figure(8); clf
+f = figure(4); clf
 set(f,'Position',[200 200 500 140]);
 for i = 1:Ngroup
     for j = 1:3
@@ -138,7 +138,7 @@ end
 order = [3 2 1];
 Nday = [2 5 10];
 
-f = figure(9); clf; hold on
+f = figure(5); clf; hold on
 set(f,'Position',[200 200 140 140]);
 for i = 1:Ngroup
     o = order(i);
