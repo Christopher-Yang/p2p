@@ -67,14 +67,16 @@ for i=1:data.Ntrials % loop over trials
     data.initVel(i) = data.tanVel{i}(data.init(i)+delay); % initial velocity
     
     % calculate reaction time
-    idx2 = data.tanVel{i} > 0.1; % find timepoints where velocity exceed 0.1 m/s
-    idx2(1:data.go(i)) = 0; % ignore all timepoints before go cue
-    idx = find(idx2 == 1,1); % find first timepoint after go cue where velocity exceeded 0.1 m/s
-    if isempty(idx) % if velocity didn't exceed 0.1 m/s, then set reaciton time to NaN
-        data.RT(i) = NaN;
-    else % else, compute reaction time
-        data.RT(i) = time(idx) - time(data.go(i)) - 0.1; % subtract off 100 ms to account for Kinereach delay
-    end
+%     idx2 = data.tanVel{i} > 0.1; % find timepoints where velocity exceed 0.1 m/s
+%     idx2(1:data.go(i)) = 0; % ignore all timepoints before go cue
+%     idx = find(idx2 == 1,1); % find first timepoint after go cue where velocity exceeded 0.1 m/s
+%     if isempty(idx) % if velocity didn't exceed 0.1 m/s, then set reaciton time to NaN
+%         data.RT(i) = NaN;
+%     else % else, compute reaction time
+%         data.RT(i) = time(idx) - time(data.go(i)) - 0.1; % subtract off 100 ms to account for Kinereach delay
+%     end
+    
+    data.RT(i) = time(data.init(i))-time(data.go(i));
     
     % find timepoints where cursor deviated horizontally from the starting
     % target by more than 1 cm 
