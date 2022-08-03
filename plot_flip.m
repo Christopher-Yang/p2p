@@ -133,6 +133,77 @@ end
 % save weights for analysis with tracking code
 % save weight2_opt weight2_opt
 
+%%
+load Variables/sd
+
+sd = sd * 180/pi;
+
+x = [squeeze(sd(5,1,1:13)); squeeze(sd(14,2,:)); squeeze(sd(end,3,2:5))];
+y = [weight2_opt{1}(:,4); weight2_opt{2}(:,4); weight2_opt{3}(2:5,4)];
+p = polyfit(x,y,1);
+yfit = polyval(p,[5; 45]);
+lm = fitlm(x,y);
+
+figure(10); clf; hold on
+plot(squeeze(sd(5,1,1:13)), weight2_opt{1}(:,4), '.', 'Color', col(1,:), 'MarkerSize', 25)
+plot(squeeze(sd(14,2,:)), weight2_opt{2}(:,4), '.', 'Color', col(2,:), 'MarkerSize', 25)
+plot(squeeze(sd(end,3,2:5)), weight2_opt{3}(2:5,4), '.', 'Color', col(3,:), 'MarkerSize', 25)
+plot([5 45],yfit,'k','LineWidth',1,'HandleVisibility','off')
+xlabel(['Circular standard deviation (' char(176) ')'])
+ylabel('Probability of habitual reach')
+xticks(5:10:45)
+yticks(0:0.25:0.75)
+axis([5 45 0 0.75])
+
+%%
+
+for i = 1:Ngroup
+    Nsubj = length(data.(groups{i}));
+    idx = data.(groups{i}){1}.targBin(end-99:end); % target bins
+    
+    for j = 1:Nsubj
+        dat = Pr_idx{i}(:,j); % reach type
+        
+        for k = 1:4
+            datBin = dat(idx == k);
+            Nreaches = length(datBin);
+            
+            gdBin{i}(k,j) = sum(datBin == 1) / Nreaches;
+            habBin{i}(k,j) = sum(datBin == 2) / Nreaches;
+        end
+    end
+end
+
+figure(11); clf
+subplot(1,2,1); hold on
+for k = 1:4
+    for i = 1:Ngroup
+        jitter = (rand(length(data.(groups{i})), 1) - 0.5) * 0.5;
+        plot((i-1) * 5 + k + jitter, gdBin{i}(k,:), '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility', 'off')
+        plot((i-1) * 5 + k, mean(gdBin{i}(k,:)), 'ko', 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
+    end
+end
+yticks(0:0.25:1)
+ylabel('Proportion of goal-directed reaches')
+xticks([1:4 6:9 11:14])
+xticklabels({'Closest', 'Close', 'Far', 'Farthest', 'Closest', 'Close', 'Far', 'Farthest', 'Closest', 'Close', 'Far', 'Farthest'})
+xtickangle(45)
+
+subplot(1,2,2); hold on
+for k = 1:4
+    for i = 1:Ngroup
+        jitter = (rand(length(data.(groups{i})), 1) - 0.5) * 0.5;
+        plot((i-1) * 5 + k + jitter, habBin{i}(k,:), '.', 'MarkerSize', 12, 'Color', col(i,:), 'HandleVisibility', 'off')
+        plot((i-1) * 5 + k, mean(habBin{i}(k,:)), 'ko', 'MarkerSize', 6, 'MarkerFaceColor', col(i,:), 'LineWidth', 1)
+    end
+end
+yticks(0:0.25:1)
+ylabel('Proportion of habitual reaches')
+xticks([1:4 6:9 11:14])
+xticklabels({'Closest', 'Close', 'Far', 'Farthest', 'Closest', 'Close', 'Far', 'Farthest', 'Closest', 'Close', 'Far', 'Farthest'})
+xtickangle(45)
+legend({'2-day','5-day','10-day'}, 'Location', 'northwest')
+
 %% perform MLE for uniform model
 for k = 1:Nblock % loop over blocks
     for j = 1:Ngroup % loop over groups
@@ -237,20 +308,10 @@ T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block',
 
 % split reaction times by whether they were from goal-directed or habitual
 % reaches
-close = 0; % number of trials where target was less than 30 deg from y-axis
 for j = 1:Ngroup
-    
-    % indices of targets less than 30 deg from y-axis
-    idx1 = (target_gd{j}(:,4) < 2*pi/3) + (target_gd{j}(:,4) > pi/3) == 2;
-    idx2 = (target_gd{j}(:,4) < -pi/3) + (target_gd{j}(:,4) > -2*pi/3) == 2;
-    idx = logical(idx1 + idx2);
-    
-    close = close + sum(idx)*allSubj(j);
-    
     for i = 1:allSubj(j)
         
         RT = data.(groups{j}){i}.RT(end-99:end); % data from flip block
-        RT(idx) = NaN; % NaN out trials too close to y-axis
         
         % divide data into goal-directed or habitual
         RT_gd{j}(i) = mean(RT(Pr_idx{j}(:,i) == 1),'omitnan');
@@ -260,14 +321,6 @@ for j = 1:Ngroup
         RT_all{j}(:,i) = RT;
     end
 end
-
-% number of trials where RT couldn't be computed because velocity never
-% exceeded 0.1 m/s
-sumnans = sum(cellfun(@(x) sum(isnan(x),'all'), RT_all));
-bad = sumnans - close;
-
-disp(['Trials where velocity did not exceed 0.1 m/s: ' num2str(bad) '/' num2str(sum(allSubj)*100)]) 
-disp(['Trials where target was within 30 degrees of mirroring axis: ' num2str(close) '/' num2str(sum(allSubj)*100)]) 
 
 f = figure(9); clf; hold on
 set(f,'Position',[200 200 150 130]);
@@ -281,8 +334,8 @@ end
 xticks([2 6])
 xticklabels({'Goal-directed', 'Habitual'})
 xlim([0.5 7.5])
-yticks(0:2)
-ylim([0 2])
+yticks(0.3:0.3:1.2)
+ylim([0.3 1.2])
 ylabel('Reaction time (s)')
 set(gca,'Tickdir','out')
 

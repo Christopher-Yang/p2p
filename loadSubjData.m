@@ -38,7 +38,21 @@ for blk=1:Nblocks % loop over blocks
             start(trial,:) = [START_X START_Y];
         end
         targetRel(trial,:) = targetAbs(trial,:)-start(trial,:); % relative target position
-        targAng(trial) = atan2(targetRel(trial,2),targetRel(trial,1)); % relative target angle
+        tAng = atan2(targetRel(trial,2),targetRel(trial,1));
+        targAng(trial) = tAng; % relative target angle
+        
+        % target position bin relative to y-axis; bins numbered from 1
+        % (closest)-4 (furthest)
+        if (tAng>=3*pi/8 && tAng<5*pi/8) || (tAng>=-5*pi/8 && tAng<-3*pi/8)
+            tBin = 1;
+        elseif (tAng>=2*pi/8 && tAng<3*pi/8) || (tAng>=5*pi/8 && tAng<6*pi/8) || (tAng>=-3*pi/8 && tAng<-2*pi/8) || (tAng>=-6*pi/8 && tAng<-5*pi/8)
+            tBin = 2;
+        elseif (tAng>=pi/8 && tAng<2*pi/8) || (tAng>=6*pi/8 && tAng<7*pi/8) || (tAng>=-2*pi/8 && tAng<-pi/8) || (tAng>=-7*pi/8 && tAng<-6*pi/8)
+            tBin = 3;
+        elseif (tAng>=7*pi/8 && tAng<pi) || (tAng>=-pi && tAng<-7*pi/8) || (tAng>=-pi/8 && tAng<pi/8)
+            tBin = 4;
+        end
+        targBin(trial) = tBin;
         
         state{trial} = d(:,7); % trial 'state' at each time point
         time{trial} = d(:,9); % time during trial
@@ -66,4 +80,5 @@ data.time = time;
 data.targAng = targAng;
 data.targetAbs = targetAbs;
 data.targetRel = targetRel;
+data.targBin = targBin;
 data.start = start;

@@ -47,7 +47,6 @@ end
 
 % set variables for plotting
 gblock = [3 2 1]; % set order in which to plot groups (10-day, 5-day, then 2-day)
-trialIdx = [5 14 29]; % select which trials to plot from variable "trials"
 lw = 0.25; % line width for plots
 dayStart = [7 47 227 527]; % index of day 1, 2, 5, and 10
 dayStartLabels = {'1','2','5','10'};
@@ -69,11 +68,11 @@ plot([dayStart2; dayStart2],[0.1 0.5],'Color',[0.8 0.8 0.8])
 % plot baseline data
 for j = 1:3
     avg = mean(pkVel_mu{j}(trials{1}));
-    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
+    plot([7 dayStart(j+1)+60], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
 
 % plot data from days 1-2
-for i = 2:5
+for i = 2:6
     for j = 1:3
         s = shadedErrorBar(trials{i},pkVel_mu{gblock(j)}(trials{i}), pkVel_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -81,7 +80,7 @@ for i = 2:5
 end
 
 % plot data from days 3-5
-for i = 6:14
+for i = 6:15
     for j = 1:2
         s = shadedErrorBar(trials{i},pkVel_mu{gblock(j)}(trials{i}), pkVel_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -89,7 +88,7 @@ for i = 6:14
 end
 
 % plot data from days 6-10
-for i = 15:29
+for i = 15:30
     s = shadedErrorBar(trials{i},pkVel_mu{3}(trials{i}), pkVel_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
@@ -98,7 +97,7 @@ xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(0.1:0.2:0.5)
 ylabel('Peak velocity (m/s)')
-axis([7 566 0.1 0.5])
+axis([7 586 0.1 0.5])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
@@ -115,11 +114,11 @@ plot([dayStart2; dayStart2],[10 40],'Color',[0.8 0.8 0.8])
 % plot baseline data
 for j = 1:3
     avg = 100*mean(pLength_mu{j}(trials{1}));
-    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
+    plot([7 dayStart(j+1)+60], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
 
 % plot data from days 1-2
-for i = 2:5
+for i = 2:6
     for j = 1:3
         s = shadedErrorBar(trials{i},pLength_mu{gblock(j)}(trials{i})*100, pLength_se{gblock(j)}(trials{i})*100);
         editErrorBar(s,col(gblock(j),:),lw);
@@ -127,7 +126,7 @@ for i = 2:5
 end
 
 % plot data from days 3-5
-for i = 6:14
+for i = 6:15
     for j = 1:2
         s = shadedErrorBar(trials{i}, pLength_mu{gblock(j)}(trials{i})*100, pLength_se{gblock(j)}(trials{i})*100);
         editErrorBar(s,col(gblock(j),:),lw);
@@ -135,7 +134,7 @@ for i = 6:14
 end
 
 % plot data from days 6-10
-for i = 15:29
+for i = 15:30
     s = shadedErrorBar(trials{i}, pLength_mu{3}(trials{i})*100, pLength_se{3}(trials{i})*100);
     editErrorBar(s,col(3,:),lw);
 end
@@ -144,7 +143,7 @@ xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(10:10:40)
 ylabel('Path length (cm)')
-axis([7 566 10 40])
+axis([7 586 10 40])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
@@ -160,11 +159,11 @@ plot([dayStart2; dayStart2],[0 6],'Color',[0.8 0.8 0.8])
 % plot baseline data
 for j = 1:3
     avg = mean(movtime_mu{j}(trials{1}));
-    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
+    plot([7 dayStart(j+1)+60], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
 
 % plot data from days 1-2
-for i = 2:5
+for i = 2:6
     for j = 1:3
         s = shadedErrorBar(trials{i},movtime_mu{gblock(j)}(trials{i}), movtime_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -172,7 +171,7 @@ for i = 2:5
 end
 
 % plot data from days 3-5
-for i = 6:14
+for i = 6:15
     for j = 1:2
         s = shadedErrorBar(trials{i},movtime_mu{gblock(j)}(trials{i}), movtime_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -180,7 +179,7 @@ for i = 6:14
 end
 
 % plot data from days 6-10
-for i = 15:29
+for i = 15:30
     s = shadedErrorBar(trials{i},movtime_mu{3}(trials{i}), movtime_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
@@ -189,7 +188,7 @@ xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(0:2:8)
 ylabel('Movement time (s)')
-axis([7 566 0 6])
+axis([7 586 0 6])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
@@ -205,12 +204,12 @@ plot([dayStart2; dayStart2],[0 2],'Color',[0.8 0.8 0.8])
 % plot baseline data
 for j = 1:3
     avg = mean(RT_mu{j}(trials{1}));
-    plot([7 dayStart(j+1)+40], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
+    plot([7 dayStart(j+1)+60], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
 
 
 % plot data from days 1-2
-for i = 2:5
+for i = 2:6
     for j = 1:3
         s = shadedErrorBar(trials{i},RT_mu{gblock(j)}(trials{i}), RT_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -218,7 +217,7 @@ for i = 2:5
 end
 
 % plot data from days 3-5
-for i = 6:14
+for i = 6:15
     for j = 1:2
         s = shadedErrorBar(trials{i},RT_mu{gblock(j)}(trials{i}), RT_se{gblock(j)}(trials{i}));
         editErrorBar(s,col(gblock(j),:),lw);
@@ -226,7 +225,7 @@ for i = 6:14
 end
 
 % plot data from days 6-10
-for i = 15:29
+for i = 15:30
     s = shadedErrorBar(trials{i},RT_mu{3}(trials{i}), RT_se{3}(trials{i}));
     editErrorBar(s,col(3,:),lw);
 end
@@ -235,7 +234,7 @@ xticks(dayStart)
 xticklabels(dayStartLabels)
 yticks(.5:.5:2)
 ylabel('Reaction time (s)')
-axis([7 566 .2 2])
+axis([7 586 .2 2])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
