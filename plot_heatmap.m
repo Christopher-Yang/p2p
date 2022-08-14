@@ -101,7 +101,7 @@ end
 % save plot for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/flip_direction','-dpdf','-painters')
 
-%% Supplementary Figure 3A
+%% Supplementary Figure 1A
 f = figure(7); clf
 set(f,'Position',[200 200 300 150]);
 for i = 1:2

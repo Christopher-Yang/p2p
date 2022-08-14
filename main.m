@@ -67,22 +67,22 @@ disp('All Done')
 
 %% PART 2: FOLLOW-UP DATA ANALYSIS AND PLOTTING FIGURES
 
-% plot Figure 2A, 4A, and Supplementary Figure 4A
+% plot Figure 2A, 4A, and Supplementary Figure 2A
 plot_traj(data)
 
 % plot Figure 2B-C
 plot_direction(data)
 
-% plot Figure 4B and Supplementary Figure 3A
-plot_heatmap(data)
-
-% plot Figure 4C-E and Supplementary Figure 3B
-plot_flip(data)
-
-% plot Supplementary Figure 1
+% plot Figure 2D-G
 plot_kinematics(data)
 
-% plot Supplementary Figure 3C
+% plot Figure 4B and Supplementary Figure 1A
+plot_heatmap(data)
+
+% plot Figure 4C-E and Supplementary Figure 1B
+plot_flip(data)
+
+% plot Supplementary Figure 1C
 % 
 % set loadAccuracy = 1 if you want to use precomputed accuracy matrix
 % 
@@ -91,5 +91,5 @@ plot_kinematics(data)
 loadAccuracy = 1;
 modelRecovery(loadAccuracy)
 
-% plot Supplementary Figure 4B
+% plot Supplementary Figure 2B
 plot_away(data)

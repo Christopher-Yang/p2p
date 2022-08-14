@@ -133,29 +133,7 @@ end
 % save weights for analysis with tracking code
 % save weight2_opt weight2_opt
 
-%%
-load Variables/sd
-
-sd = sd * 180/pi;
-
-x = [squeeze(sd(5,1,1:13)); squeeze(sd(14,2,:)); squeeze(sd(end,3,2:5))];
-y = [weight2_opt{1}(:,4); weight2_opt{2}(:,4); weight2_opt{3}(2:5,4)];
-p = polyfit(x,y,1);
-yfit = polyval(p,[5; 45]);
-lm = fitlm(x,y);
-
-figure(10); clf; hold on
-plot(squeeze(sd(5,1,1:13)), weight2_opt{1}(:,4), '.', 'Color', col(1,:), 'MarkerSize', 25)
-plot(squeeze(sd(14,2,:)), weight2_opt{2}(:,4), '.', 'Color', col(2,:), 'MarkerSize', 25)
-plot(squeeze(sd(end,3,2:5)), weight2_opt{3}(2:5,4), '.', 'Color', col(3,:), 'MarkerSize', 25)
-plot([5 45],yfit,'k','LineWidth',1,'HandleVisibility','off')
-xlabel(['Circular standard deviation (' char(176) ')'])
-ylabel('Probability of habitual reach')
-xticks(5:10:45)
-yticks(0:0.25:0.75)
-axis([5 45 0 0.75])
-
-%%
+%% proportion of habitual reaches based on target direction
 
 for i = 1:Ngroup
     Nsubj = length(data.(groups{i}));
@@ -174,7 +152,7 @@ for i = 1:Ngroup
     end
 end
 
-figure(11); clf
+figure(20); clf
 subplot(1,2,1); hold on
 for k = 1:4
     for i = 1:Ngroup
@@ -245,15 +223,14 @@ for k = 1:2 % loop over first/second half of data
 end
 
 % store data for statistical analysis in R
-y = [weight2_opt_half{1}(:); weight2_opt_half{2}(:); weight2_opt_half{3}(:)];
+y = [weight2_opt_half{1}(:); weight2_opt_half{2}(:)];
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
-groupNames(55:64,1) = "10-day";
-half([1:13 27:40 55:59],1) = "first";
-half([14:26 41:54 60:64],1) = "second";
-subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+half([1:13 27:40],1) = "first";
+half([14:26 41:54],1) = "second";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, half, subject, y, 'VariableNames', {'group','half','subject','habit'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
 
 %% Figure 4C
 f = figure(8); clf;
@@ -292,17 +269,16 @@ set(gca,'TickDir','out')
 
 % save data for analysis in R
 z = [];
-for i = 1:3
+for i = 1:2
     z = [z; reshape(weight2_opt{i}(:,3:4), [allSubj(i)*2 1])];
 end
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
-groupNames(55:64,1) = "10-day";
-blockNames([1:13 27:40 55:59],1) = "Late";
-blockNames([14:26 41:54 60:64],1) = "Flip";
-subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+blockNames([1:13 27:40],1) = "Late";
+blockNames([14:26 41:54],1) = "Flip";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
 
 %% Figure 4D
 
@@ -342,15 +318,14 @@ set(gca,'Tickdir','out')
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/habit_RT','-dpdf','-painters')
 
-y = [RT_gd{1}'; RT_hab{1}'; RT_gd{2}'; RT_hab{2}'; RT_gd{3}'; RT_hab{3}'];
+y = [RT_gd{1}'; RT_hab{1}'; RT_gd{2}'; RT_hab{2}'];
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
-groupNames(55:64,1) = "10-day";
-reach([1:13 27:40 55:59],1) = "gd";
-reach([14:26 41:54 60:64],1) = "habit";
-subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+reach([1:13 27:40],1) = "gd";
+reach([14:26 41:54],1) = "habit";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, reach, subject, y, 'VariableNames', {'group','reach','subject','RT'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 %% Figure 4E
 f = figure(10); clf; hold on
@@ -370,7 +345,7 @@ ylabel({'Weight'})
 % save figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/p2p_half','-dpdf','-painters')
 
-%% Supplementary Figure 3B
+%% Supplementary Figure 1B
 
 f = figure(11); clf; hold on
 set(f,'Position',[200 200 200 150]);

@@ -58,7 +58,7 @@ for i = 1:29
     trials{i+1} = (i-1)*20 + 7:(i-1)*20 + 26;
 end
 
-%% Supplementary Figure 1A
+%% Figure 2D
 f = figure(12); clf; hold on
 set(f,'Position',[200 200 140 140]);
 
@@ -103,7 +103,7 @@ set(gca,'TickDir','out')
 % prints figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
-%% Supplementary Figure 1B
+%% Figure 2E
 
 f = figure(13); clf; hold on
 set(f,'Position',[200 200 140 140]);
@@ -149,7 +149,7 @@ set(gca,'TickDir','out')
 % prints figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
-%% Supplementary Figure 1C
+%% Figure 2F
 f = figure(14); clf; hold on
 set(f,'Position',[200 200 140 140]);
 
@@ -194,7 +194,7 @@ set(gca,'TickDir','out')
 % prints figure for Illustrator
 % print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
-%% Supplementary Figure 1D
+%% Figure 2G
 f = figure(15); clf; hold on 
 set(f,'Position',[200 200 140 140]);
 

@@ -37,19 +37,17 @@ end
 
 % store data for analysis in R
 x = [reshape(habit.day2(:,3:end), [numel(habit.day2(:,3:end)) 1]); ...
-    reshape(habit.day5(:,3:end), [numel(habit.day5(:,3:end)) 1]); ...
-    reshape(habit.day10(:,3:end), [numel(habit.day10(:,3:end)) 1])];
+    reshape(habit.day5(:,3:end), [numel(habit.day5(:,3:end)) 1])];
 
 groupNames(1:26,1) = "2-day";
 groupNames(27:54,1) = "5-day";
-groupNames(55:64,1) = "10-day";
-blockNames([1:13 27:40 55:59],1) = "late";
-blockNames([14:26 41:54 60:64],1) = "flip";
-subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2]) repmat(28:32,[1 2])]';
+blockNames([1:13 27:40],1) = "late";
+blockNames([14:26 41:54],1) = "flip";
+subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, blockNames, subject, x, 'VariableNames', {'group','block','subject','away'});
-% writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
+writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
 
-%% Figure 4G
+%% Supplementary Figure 2B
 
 col = [180 180 0
        0 191 255

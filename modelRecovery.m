@@ -121,7 +121,7 @@ x = x(:);
 y = repmat(w2,[length(w1) 1 length(kappa)]);
 y = y(:);
 
-%% Supplementary Figure 3C
+%% Supplementary Figure 1C
 f = figure(16); clf
 set(f,'Position',[200 200 200 150]);
 scatter(x,y,13,accuracy(:),'filled')
