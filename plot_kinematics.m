@@ -65,6 +65,11 @@ set(f,'Position',[200 200 140 140]);
 % vertical lines delineating days
 plot([dayStart2; dayStart2],[0.1 0.5],'Color',[0.8 0.8 0.8])
 
+% delineate flip block
+rectangle('Position',[87 0.1 20 0.4], 'EdgeColor', 'none', 'FaceColor', [col(1,:) 0.1])
+rectangle('Position',[267 0.1 20 0.4], 'EdgeColor', 'none', 'FaceColor', [col(2,:) 0.1])
+rectangle('Position',[567 0.1 20 0.4], 'EdgeColor', 'none', 'FaceColor', [col(3,:) 0.1])
+
 % plot baseline data
 for j = 1:3
     avg = mean(pkVel_mu{j}(trials{1}));
@@ -101,7 +106,7 @@ axis([7 586 0.1 0.5])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
 %% Figure 2E
 
@@ -110,6 +115,11 @@ set(f,'Position',[200 200 140 140]);
 
 % vertical lines delineating days
 plot([dayStart2; dayStart2],[10 40],'Color',[0.8 0.8 0.8])
+
+% delineate flip block
+rectangle('Position',[87 10 20 30], 'EdgeColor', 'none', 'FaceColor', [col(1,:) 0.1])
+rectangle('Position',[267 10 20 30], 'EdgeColor', 'none', 'FaceColor', [col(2,:) 0.1])
+rectangle('Position',[567 10 20 30], 'EdgeColor', 'none', 'FaceColor', [col(3,:) 0.1])
 
 % plot baseline data
 for j = 1:3
@@ -147,7 +157,7 @@ axis([7 586 10 40])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
 %% Figure 2F
 f = figure(14); clf; hold on
@@ -155,6 +165,11 @@ set(f,'Position',[200 200 140 140]);
 
 % vertical lines delineating days
 plot([dayStart2; dayStart2],[0 6],'Color',[0.8 0.8 0.8])
+
+% delineate flip block
+rectangle('Position',[87 0 20 6], 'EdgeColor', 'none', 'FaceColor', [col(1,:) 0.1])
+rectangle('Position',[267 0 20 6], 'EdgeColor', 'none', 'FaceColor', [col(2,:) 0.1])
+rectangle('Position',[567 0 20 6], 'EdgeColor', 'none', 'FaceColor', [col(3,:) 0.1])
 
 % plot baseline data
 for j = 1:3
@@ -192,7 +207,7 @@ axis([7 586 0 6])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
 %% Figure 2G
 f = figure(15); clf; hold on 
@@ -201,12 +216,16 @@ set(f,'Position',[200 200 140 140]);
 % vertical lines delineating days
 plot([dayStart2; dayStart2],[0 2],'Color',[0.8 0.8 0.8])
 
+% delineate flip block
+rectangle('Position',[87 0 20 2], 'EdgeColor', 'none', 'FaceColor', [col(1,:) 0.1])
+rectangle('Position',[267 0 20 2], 'EdgeColor', 'none', 'FaceColor', [col(2,:) 0.1])
+rectangle('Position',[567 0 20 2], 'EdgeColor', 'none', 'FaceColor', [col(3,:) 0.1])
+
 % plot baseline data
 for j = 1:3
     avg = mean(RT_mu{j}(trials{1}));
     plot([7 dayStart(j+1)+60], [avg avg], 'Color', col(j,:), 'LineWidth', 1)
 end
-
 
 % plot data from days 1-2
 for i = 2:6
@@ -238,6 +257,6 @@ axis([7 586 .2 2])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
+print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
 end
