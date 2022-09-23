@@ -106,7 +106,7 @@ axis([7 586 0.1 0.5])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/peak_vel','-dpdf','-painters')
 
 %% Figure 2E
 
@@ -157,7 +157,7 @@ axis([7 586 10 40])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/path_length','-dpdf','-painters')
 
 %% Figure 2F
 f = figure(14); clf; hold on
@@ -207,7 +207,7 @@ axis([7 586 0 6])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/move_time','-dpdf','-painters')
 
 %% Figure 2G
 f = figure(15); clf; hold on 
@@ -257,6 +257,6 @@ axis([7 586 .2 2])
 set(gca,'TickDir','out')
 
 % prints figure for Illustrator
-print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
+% print('C:/Users/Chris/Documents/Papers/habit/figure_drafts/rt','-dpdf','-painters')
 
 end

@@ -230,7 +230,7 @@ half([1:13 27:40],1) = "first";
 half([14:26 41:54],1) = "second";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, half, subject, y, 'VariableNames', {'group','half','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/half.csv')
 
 %% Figure 4C
 f = figure(8); clf;
@@ -278,7 +278,7 @@ blockNames([1:13 27:40],1) = "Late";
 blockNames([14:26 41:54],1) = "Flip";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, blockNames, subject, z, 'VariableNames', {'group','block','subject','habit'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/habit_weight.csv')
 
 %% Figure 4D
 
@@ -325,7 +325,7 @@ reach([1:13 27:40],1) = "gd";
 reach([14:26 41:54],1) = "habit";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, reach, subject, y, 'VariableNames', {'group','reach','subject','RT'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/RT.csv')
 
 %% Figure 4E
 f = figure(10); clf; hold on

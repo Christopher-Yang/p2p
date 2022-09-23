@@ -45,7 +45,7 @@ blockNames([1:13 27:40],1) = "late";
 blockNames([14:26 41:54],1) = "flip";
 subject = [repmat(1:13,[1 2]) repmat(14:27,[1 2])]';
 T = table(groupNames, blockNames, subject, x, 'VariableNames', {'group','block','subject','away'});
-writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
+% writetable(T,'C:/Users/Chris/Documents/R/habit/data/away.csv')
 
 %% Supplementary Figure 2B
 
