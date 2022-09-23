@@ -1,12 +1,12 @@
-This collection is associated with the article "Emergence of habitual
-control in a novel motor skill over multiple days of practice". This
-code generates all figures related to the point-to-point reaching
-task. Raw data is contained in the folder "Data". The data is further
-subdivided into folders for the 2-day, 5-day, and 10-day training
-groups, participants in each group, and blocks for each
-participant. The numerical order of the blocks correspond to the
-chronological order that participants performed the experiment. The
-block names correspond to the following:
+This collection is associated with the article "Control becomes
+habitual early on when learning a novel motor skill". This code
+generates all figures related to the point-to-point reaching task. Raw
+data is contained in the folder "Data". The data is further subdivided
+into folders for the 2-day, 5-day, and 10-day training groups,
+participants in each group, and blocks for each participant. The
+numerical order of the blocks correspond to the chronological order
+that participants performed the experiment. The block names correspond
+to the following:
 
       B1_baseline: 30 reaches under the baseline mapping
       B2 - (B5 or B14 or B29): 100 reaches under the bimanual mapping
