@@ -16,51 +16,31 @@
 clear all
 
 % path to data for each group
-path = {'Data/denovo_2day/','Data/denovo_5day/','Data/denovo_10day/'};
+path = 'Data/CorsiMentalRotation_2day/';
 
 % select names of subjects to be analyzed; names{1}: 2-day group; names{2}:
 % 5-day group; names{3}: 10-day group
-names{1} = {'subj1','subj3','subj4','subj5','subj6','subj7','subj8','subj9','subj10','subj11','subj12','subj13','subj14'};
-names{2} = {'subj13','subj15','subj17','subj18','subj19','subj21','subj22','subj23','subj24','subj25','subj26','subj27','subj28','subj29'};
-names{3} = {'subj1','subj2','subj3','subj4','subj5'};
+subj_name = {'subj03','subj04','subj05','subj06','subj07','subj08','subj09','subj10','subj11','subj12','subj13','subj14','subj15','subj16','subj17','subj18'};
 
 % select blocks to be analyzed for each group
-blockNames{1} = {'B1_baseline','B2','B3','B4','B5','B6_habit'};
-blockNames{2} = {'B1_baseline','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11','B12','B13','B14','B15_habit'};
-blockNames{3} = {'B1_baseline','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11','B12','B13','B14','B15','B16','B17','B18','B19','B20','B21','B22','B23','B24','B25','B26','B27','B28','B29','B30_habit'};
+block_name = {'d1_prac_avg1', 'd1_prac_bi1', 'd1_prac_bi2', 'd1_prac_bi3', 'd1_prac_bi4', 'd1_prac_bi5', 'd1_prac_bi6', 'd2_prac_bi7'};
 
 % starting position of the target: [x y]
 START = [0.6 0.25];
+Nsubj = length(subj_name);
 
-% loop to analyze data
-for i = 1:length(names) % loop over groups
+for subj = 1:Nsubj
+    disp(subj_name{subj})
     
-    blocks = blockNames{i}; % blocks in current group
-    subjnames = names{i}; % subjects in current group
-    Nsubj = length(subjnames); % number of subjects in current group
-    for subj = 1:Nsubj % loop over subjects
-        
-        clear d
-        disp(subjnames{subj});
-        
-        % load raw data from data files
-        disp('    Loading Subject Data...');
-        d = loadSubjData([path{i},subjnames{subj}],blocks); 
-
-        % initial data analysis (smooth trajectories, rotate, get RT, etc.)
-        disp('    Processing Data...')
-        d = processData(d);
-        
-        % store data in "data"
-        switch i 
-            case 1
-                data.day2{subj} = d;
-            case 2
-                data.day5{subj} = d;
-            case 3
-                data.day10{subj} = d;
-        end
-    end
+    % load raw data from data files
+    disp('    Loading Subject Data...');
+    d = loadSubjData([path subj_name{subj}], block_name);
+    
+    % initial data analysis (smooth trajectories, rotate, get RT, etc.)
+    disp('    Processing Data...')
+    d = processData(d);
+    
+    data{subj} = d;
 end
 
 disp('All Done')
@@ -78,18 +58,3 @@ plot_kinematics(data)
 
 % plot Figure 4B and Supplementary Figure 1A
 plot_heatmap(data)
-
-% plot Figure 4C-E and Supplementary Figure 1B
-plot_flip(data)
-
-% plot Supplementary Figure 1C
-% 
-% set loadAccuracy = 1 if you want to use precomputed accuracy matrix
-% 
-% to compute accuracy matrix from scratch, set loadAccuracy = 0, which will
-% take about 15 mins to run
-loadAccuracy = 1;
-modelRecovery(loadAccuracy)
-
-% plot Supplementary Figure 2B
-plot_away(data)

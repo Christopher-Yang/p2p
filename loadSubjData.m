@@ -21,7 +21,7 @@ for blk=1:Nblocks % loop over blocks
     fnames = dir(path); % names of files in the file path
     Ntrials = size(tFile,1); % number of trials
     for j=1:Ntrials % loop over trials
-        d = dlmread([path,'/',fnames(j+2).name],' ',6,0); % read data files
+        d = dlmread([path,'/',fnames(j+2).name],' ',8,0); % read data files
 
         L{trial} = d(:,1:2); % left hand X and Y
         R{trial} = d(:,3:4); % right hand X and Y
